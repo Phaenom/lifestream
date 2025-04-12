@@ -83,11 +83,7 @@ BOOT
 
 ## Current Display Layout Example
 
-```
-
-![lifestream](https://github.com/user-attachments/assets/f150d480-7aa2-4d9f-87a1-bc9e985707db)
-
-```
+![lifestream](https://github.com/Phaenom/lifestream/blob/main/media/lifestream.png)
 
 ---
 
