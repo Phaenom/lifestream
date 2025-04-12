@@ -11,6 +11,7 @@
 #include "src/NetworkManager.h"
 #include "src/GameState.h"
 #include "src/Config.h"
+#include "src/assets/mtg_logo_symbol.h"
 
 // Instantiate managers
 DisplayManager display;  // Responsible for all ePaper display handling
@@ -18,7 +19,7 @@ GameState game;          // Stores player life totals and turn information
 
 // Variables to track previous state (for detecting changes)
 int previousLife[4] = { -1, -1, -1, -1 };  // Store previous life totals of each player
-int previousTurnPlayerID = -1;             // Store previous turn owner
+int previousTurnPlayerID = -1;             // Store previous turn ownerc:\Users\Phaen\Documents\Workspace\lifestream\src\DisplayManager.cpp
 
 // Arduino setup() runs once when the device starts
 void setup() {
@@ -28,7 +29,7 @@ void setup() {
     // Initialize ePaper Display hardware
     display.begin();
 
-    // Initialize the game with 4 players, each starting with 20 life
+    // Initialize the game with 4 players, each starting with 20 lifec:\Users\Phaen\Documents\Workspace\lifestream\src\DisplayManager.h
     game.reset(4, 20);
 
     // Force initial draw by syncing previous values
