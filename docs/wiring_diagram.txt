@@ -1,0 +1,1 @@
+Placeholder for wiring diagram (ESP32 + Waveshare 2.9 ePaper + Encoder + Button + Battery)

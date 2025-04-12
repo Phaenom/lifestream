@@ -1,25 +1,59 @@
-# LIFESTREAM
 
-# ESP32 Multiplayer Life Counter System
+# LifeStream
 
-A battery-powered multiplayer life counter for tabletop games using ESP32, ePaper display, Rotary Encoder, and ESP-NOW wireless networking.
+## Multiplayer Life Counter for ESP32 with ePaper Display
+
+LifeStream is a scalable, battery-friendly multiplayer life tracking system for tabletop games like Magic: The Gathering.
+
+Built on the ESP32 platform using a Waveshare 2.9" V2 ePaper display, rotary encoder input, and ESP-NOW wireless networking.
+
+---
+
+## Project Goals
+
+- Personal life counter for 4 players (Planeswalkers)
+- Seamless wireless synchronization between devices
+- Designed for battery-powered operation
+- Modular, scalable architecture for future expansions
+- Player-friendly, MTG-themed user experience
 
 ---
 
 ## System Overview
 
-### Main Features
-- Auto Host/Client detection over ESP-NOW
-- Configurable number of players and starting life total
-- Dynamic player ID assignment by Host
-- Rotary encoder to adjust life total
-- Button to toggle turn ownership
-- Low-power friendly (Battery powered)
-- Real-time sync of life totals and turn state between all players
+### Architecture Diagram
+
+```plaintext
+ESP32 LifeStream Devices x4
+       (via ESP-NOW)
+           |
+    ┌───────────────┐
+    │  Host Device  │ <-- First powered-on device
+    └───────────────┘
+        ↑   ↑   ↑
+      Clients auto join
+```
 
 ---
 
-### System States & Flow
+## Features Overview
+
+| Feature                                      | Status  |
+|---------------------------------------------|---------|
+| Player Life Tracking (4 Players)            | ✓       |
+| MTG Themed: Planeswalker Labels             | ✓       |
+| Turn Indicator                              | ✓       |
+| Dynamic Redraw Optimization                 | ✓       |
+| Rotary Encoder Life Adjustment              | ✗       |
+| Button Press to Cycle Turn                  | ✗       |
+| ESP-NOW Host/Client Auto Detection          | ✗       |
+| Multiplayer Life Sync over Wi-Fi            | ✗       |
+| Battery Level Monitoring                    | ✗       |
+| OTA Updates Support                        | ✗       |
+
+---
+
+## System States & Flow
 
 ```plaintext
 BOOT
@@ -38,113 +72,90 @@ BOOT
 │     └── Wait for Player ID Assignment
 │
 └── GAME_LOOP (All Devices)
-      ├── Handle Encoder Inputs
-      ├── Handle Button Press
-      ├── Send Updates (Life or Turn Change)
+      ├── Handle Inputs (Encoder / Button)
+      ├── Send Updates (Life/Turn Changes)
       ├── Receive Network Updates
-      ├── Update Local Game State
-      └── Redraw Display
-
----
+      ├── Update Display Dynamically
+      └── Sleep on Inactivity
 ```
-### Module Responsibilities
-
-### setup()
-- Initialize Serial, GPIO, Encoder, Button
-- Initialize ePaper Display
-- Initialize ESP-NOW
-- Load Saved Settings (Optional)
-- Enter SEARCH_FOR_HOST state
 
 ---
 
-### SEARCH_FOR_HOST
-- Listen for `HOST_BROADCAST` for 3-5 seconds
-- If found → Store Host Info → Go to JOIN_AS_CLIENT
-- If not found → Become Host → Go to HOST_CONFIG_MENU
+## Current Display Layout Example
+
+```
+LifeStream - Life Totals
+
+Planeswalker 1: 20 <-
+Planeswalker 2: 18
+Planeswalker 3: 15
+Planeswalker 4: 22
+
+You are Planeswalker 2
+```
 
 ---
 
-### HOST_CONFIG_MENU
-- Prompt user:
-  - Select Number of Players (2-4)
-  - Select Starting Life Total (20 or 40)
-- On Confirm:
-  - Initialize Player States
-  - Start Broadcasting `GAME_CONFIG`
-  - Listen for `JOIN_REQUEST` messages
+## Project Structure
+
+| File/Folder      | Purpose                                 |
+|-----------------|------------------------------------------|
+| src/            | All source code for Arduino / ESP32     |
+| docs/           | Wiring diagrams, visuals, assets        |
+| platformio.ini  | PlatformIO configuration                |
+| README.md       | This project overview                   |
 
 ---
 
-### JOIN_AS_CLIENT
-- Send `JOIN_REQUEST` to Host
-- Wait for `ASSIGN_PLAYER_ID` message
-- Store Assigned Player ID
-- Store Game Config
-- Enter GAME_LOOP
+## Hardware Requirements
+
+- ESP32 Dev Module
+- Waveshare 2.9" V2 ePaper Display
+- Rotary Encoder (with optional button)
+- LiPo Battery + TP4056 Charging Module
+- Optional LEDs / Buzzer for feedback
+- Optional On/Off Toggle Switch
 
 ---
 
-## GAME_LOOP
-For All Devices:
+## Setup Instructions
 
-1. Handle Encoder:
-   - Adjust Life Total
-   - Clamp between 0-99
-   - Send `LIFE_UPDATE` if changed
+1. Clone this repository:
+```bash
+git clone https://github.com/yourusername/LifeStream.git
+```
 
-2. Handle Button Press:
-   - Toggle Turn Ownership
-   - Send `TURN_UPDATE` if changed
+2. Open in PlatformIO or Arduino IDE.
 
-3. Handle Incoming Network Messages:
-   - `HOST_BROADCAST` → Update Game Config
-   - `JOIN_REQUEST` (Host only) → Assign Player ID
-   - `ASSIGN_PLAYER_ID` → Store Assigned ID
-   - `GAME_CONFIG` → Store Game Settings
-   - `LIFE_UPDATE` → Update Player's Life
-   - `TURN_UPDATE` → Update Player's Turn Status
+3. Install Required Libraries:
+- GxEPD2
+- Adafruit GFX Library
+- Adafruit BusIO
 
-4. Update ePaper Display:
-   - Show All Players' Life Totals
-   - Highlight Current Turn
-   - Emphasize Local Player's Life Total
+4. Compile & Upload to ESP32.
 
-5. Power Management (Optional):
-   - Enter Sleep Mode on Inactivity
-   - Wake on Encoder or Button Input
+5. Power on multiple devices to test Host/Client behavior.
 
 ---
 
-## Networking Message Types
+## Future Enhancements (Planned)
 
-| Message Type         | Sent By   | Data Included                          |
-|---------------------|------------|----------------------------------------|
-| HOST_BROADCAST      | Host       | Host MAC, Game Config                 |
-| JOIN_REQUEST        | Client     | Temp MAC                              |
-| ASSIGN_PLAYER_ID    | Host       | Assigned Player ID                   |
-| GAME_CONFIG         | Host       | Number of Players, Starting Life     |
-| LIFE_UPDATE         | Any        | Player ID, New Life Total            |
-| TURN_UPDATE         | Any        | Player ID, Turn Toggle State         |
-
----
-
-## Project Structure (Files)
-
-| File          | Purpose                                   |
-|---------------|-------------------------------------------|
-| main.ino      | Setup, State Machine, Main Loop          |
-| networking.h/.cpp | ESP-NOW Communication Logic         |
-| ui.h/.cpp     | Display Rendering, Menu Handling         |
-| input.h/.cpp  | Encoder and Button Input Handling        |
-| power.h/.cpp  | Battery, Sleep, Power State Management   |
-| config.h      | Constants, Pin Definitions               |
-
----
-
-## Future Enhancements
-
+- Rotary Encoder Life Adjustment
+- Button-driven Turn Cycling
+- ESP-NOW Multiplayer Communication
+- OTA Update Support
 - Battery Level Indicator
-- Game History Logging (Optional)
-- Multiplayer Game Variants (EDH Commander Life / Poison / Win Counters)
-- WiFi/Web Dashboard Support
+- Partial ePaper Refresh
+- Game Mode Variants (EDH, Commander, Win Counters)
+
+---
+
+## License
+
+MIT License
+
+---
+
+## Credits
+
+Inspired by the Magic: The Gathering community for fostering innovation in physical game accessories.
