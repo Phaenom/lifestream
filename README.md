@@ -83,16 +83,7 @@ BOOT
 
 ## Current Display Layout Example
 
-```
-LifeStream - Life Totals
-
-Planeswalker 1: 20 <-
-Planeswalker 2: 18
-Planeswalker 3: 15
-Planeswalker 4: 22
-
-You are Planeswalker 2
-```
+![lifestream](https://github.com/Phaenom/lifestream/blob/main/media/lifestream.png)
 
 ---
 
@@ -152,7 +143,7 @@ git clone https://github.com/yourusername/LifeStream.git
 
 ## License
 
-MIT License
+TBD
 
 ---
 
