@@ -143,7 +143,7 @@ git clone https://github.com/yourusername/LifeStream.git
 
 ## License
 
-MIT License
+TBD
 
 ---
 
