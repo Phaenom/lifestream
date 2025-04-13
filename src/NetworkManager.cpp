@@ -30,6 +30,8 @@ void NetworkArbiter::update() {
                 startAsHost();
             }
         }
+        Serial.print("Host Detected? ");
+        Serial.println(hostDetected);
     }
 
     if (role == ROLE_HOST) {
@@ -107,6 +109,7 @@ void NetworkArbiter::onReceive(const uint8_t *mac, const uint8_t *incomingData, 
     switch (messageType) {
         case MSG_TYPE_HOST_ANNOUNCE:
             hostDetected = true;
+            Serial.println("Host Announce Received!");
             break;
 
         case MSG_TYPE_GAME_STATE:
