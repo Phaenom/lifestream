@@ -15,9 +15,15 @@ void InputManager::begin(){
 	//(int DT, int CLK) {
 		
 	// rotary encoder input
-	encoder.attachHalfQuad( DT, CLK );
-	encoder.setCount( 20*2 ); // replace with lifecount?
+	encoder.attachHalfQuad( EPD_DT, EPD_CLK ); 	//attachFullQuad option available
+	encoder.clearCount(); // reset encoder count to 0
+	//encoder.setCount( 20*2 ); // replace with lifecount?
 	
+	oldPosition = encoder.getCount() / 2;
+	newPosition = oldPosition;
+	change = 0;
+
+	mode = 0;
 	// encoder button input
 	//encoder_button 
 	
@@ -28,9 +34,22 @@ void InputManager::begin(){
 // Update function to read inputs each loop
 long InputManager::update() {
 	// Future implementation
-	long newPosition = encoder.getCount() / 2;
+
+	newPosition = encoder.getCount()/ 2;
+//	Serial.println(encoder.getCount()); // Debug output to monitor life changes
+//	Serial.println(encoder.getCount()/2); // Debug output to monitor life changes
+
+	change = 0;
+	if (newPosition != oldPosition) {
+		change = newPosition - oldPosition;
+		oldPosition = newPosition;
+	}
+	Serial.println(change); // Debug output to monitor life changes
+
+	change = 1; // debug
 	
-	return newPosition;
+	return change;
+	//return newPosition;
 
 // Do I want to report encoder count or delta count to game state?
 // risks either way?
@@ -38,7 +57,7 @@ long InputManager::update() {
 }
 
 void InputManager::set_mode(){
-	
+	mode = 0; // future
 }
 
 void InputManager::reset(){

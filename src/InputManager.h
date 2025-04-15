@@ -16,6 +16,9 @@ class InputManager {
 public:
 	// class parameters
 	ESP32Encoder encoder;
+	long oldPosition;
+	volatile long newPosition;
+	long change;
 	//ezButton encoder_button;
 	int mode;	
 	
@@ -24,11 +27,7 @@ public:
 
     // Update function to read inputs each loop
     long update();
-	
-	void set_mode(){
-		// future
-	}
-	
+	void set_mode();
 	void reset();
 };
 

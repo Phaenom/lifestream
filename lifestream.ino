@@ -34,9 +34,6 @@ void setup() {
     // Initialize the game with 4 players, each starting with 20 lifec:\Users\Phaen\Documents\Workspace\lifestream\src\DisplayManager.h
     game.reset(4, 20);
 
-	// Initialize the hardware inputs
-	hardware.begin(); // add start HP if that makes sense for encoder
-
     // Force initial draw by syncing previous values
     for (int i = 0; i < game.playerCount; i++) {
         previousLife[i] = game.players[i].life;
@@ -55,14 +52,17 @@ void setup() {
 
     // Put display to sleep after drawing (saves power)
     display.sleep();
+
+    // Initialize the hardware inputs
+	hardware.begin(); // add start HP if that makes sense for encoder
 }
 
 // Arduino loop() runs repeatedly after setup()
 void loop() {
     bool needsRedraw = false;  // Flag to track if screen update is required
 
-	previousLife[0] = hardware.update();
-	
+	game.players[0].life += hardware.update(); // Update player 1's life based on encoder input
+    
     // Check if any player's life total has changed
     for (int i = 0; i < game.playerCount; i++) {
         if (previousLife[i] != game.players[i].life) {
