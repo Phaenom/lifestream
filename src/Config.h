@@ -12,7 +12,7 @@
 #define EPD_CLK 13 // rotary encoder
 
 #define EPD_BUZZ 18 // piezo buzzer
-//#define EPD_BUTTON 21 // end turn button
+#define EPD_BUTTON 21 // end turn button
 
 //#define EPD_LED 99 // button's LED <-replace with real pin
 

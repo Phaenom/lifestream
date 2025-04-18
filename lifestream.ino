@@ -23,6 +23,9 @@ InputManager hardware; // Responsible for all buttons, buzzers, encoders, etc
 int previousLife[4] = { -1, -1, -1, -1 };  // Store previous life totals of each player
 int previousTurnPlayerID = -1;             // Store previous turn ownerc:\Users\Phaen\Documents\Workspace\lifestream\src\DisplayManager.cpp
 
+int currentTurnPlayerID = 0;  // Static for now - will later handle real turn progression
+int temp = 0;
+
 // Arduino setup() runs once when the device starts
 void setup() {
     Serial.begin(115200);
@@ -55,13 +58,16 @@ void setup() {
 
     // Initialize the hardware inputs
 	hardware.begin(); // add start HP if that makes sense for encoder
+
+
+
 }
 
 // Arduino loop() runs repeatedly after setup()
 void loop() {
     bool needsRedraw = false;  // Flag to track if screen update is required
 
-	game.players[0].life += hardware.update(); // Update player 1's life based on encoder input
+	//game.players[0].life += hardware.update(); // Update player 1's life based on encoder input
     
     // Check if any player's life total has changed
     for (int i = 0; i < game.playerCount; i++) {
@@ -71,8 +77,16 @@ void loop() {
         }
     }
 
+    if (hardware.update_button()){
+        temp += 1;        
+        currentTurnPlayerID = temp;
+        if (temp > 3){
+            temp = 0;
+        }
+    } // Get the current turn player ID from the button input
+
     // Check if the turn has changed
-    int currentTurnPlayerID = 0;  // Static for now - will later handle real turn progression
+    //int currentTurnPlayerID = 0;  // Static for now - will later handle real turn progression
     if (previousTurnPlayerID != currentTurnPlayerID) {
         previousTurnPlayerID = currentTurnPlayerID;  // Update tracked value
         needsRedraw = true;                          // Trigger redraw

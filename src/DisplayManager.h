@@ -3,7 +3,7 @@
 #define DISPLAY_MANAGER_H
 
 #include <SPI.h>
-#include "DEV_Config.h"
+#include "DEV_Config.h" //?
 #include "EPD.h"
 #include "GUI_Paint.h"
 #include "assets/mtg_logo_symbol.h"
