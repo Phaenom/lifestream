@@ -15,12 +15,9 @@
 
 class InputManager {
 
-private:
-	long change;
-	long oldPosition;
-	long newPosition;
-
-	long pressDuration;
+// private:
+	// long oldPosition;
+	// long newPosition;
 
 public:
 	InputManager(); // Constructor
@@ -28,18 +25,24 @@ public:
 	
 	// ENCODER STUFF
 	ESP32Encoder encoder;
-	
-	//volatile long newPosition;
+	long oldPosition;
+	long newPosition;
+	long change;
 
-	//ezButton encoder_button;
+	
+	// ENCODER BUTTON STUFF
+	ezButton encoder_button;
 	int mode;	
 
 	// LED BUTTON STUFF
 	//Button led_button;
 	ezButton led_button;
+
 	bool isPressed;
 	bool isLongPress;
 	long pressTime;
+	long pressDuration;
+
 
     // Setup hardware for inputs
     void begin();//(int DT, int CLK);

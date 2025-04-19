@@ -9,6 +9,7 @@
 #include "src/DisplayManager.h"
 #include "src/InputManager.h"
 #include "src/NetworkManager.h"
+#include "src/OutputManager.h"
 #include "src/GameState.h"
 #include "src/Config.h"
 #include "src/assets/mtg_logo_symbol.h"
@@ -17,7 +18,8 @@
 DisplayManager display;  // Responsible for all ePaper display handling
 GameState game;          // Stores player life totals and turn information
 
-InputManager hardware; // Responsible for all buttons, buzzers, encoders, etc
+OutputManager output;  // Responsible for all LED and buzzer output
+InputManager hardware; // Responsible for all buttons, encoders, etc
 
 // Variables to track previous state (for detecting changes)
 int previousLife[4] = { -1, -1, -1, -1 };  // Store previous life totals of each player
@@ -25,6 +27,12 @@ int previousTurnPlayerID = -1;             // Store previous turn ownerc:\Users\
 
 int currentTurnPlayerID = 0;  // Static for now - will later handle real turn progression
 int temp = 0;
+
+// experimenting 
+unsigned long previousMillis = 0;  
+unsigned long interval = 1000;      
+
+
 
 // Arduino setup() runs once when the device starts
 void setup() {
@@ -58,7 +66,7 @@ void setup() {
 
     // Initialize the hardware inputs
 	hardware.begin(); // add start HP if that makes sense for encoder
-
+    output.begin(); // Initialize output hardware (LEDs, Buzzer, etc)
 
 
 }
@@ -67,8 +75,10 @@ void setup() {
 void loop() {
     bool needsRedraw = false;  // Flag to track if screen update is required
 
-	//game.players[0].life += hardware.update(); // Update player 1's life based on encoder input
-    
+	// TEMPORARY code to test encoder
+    // replace 0 with currentTurnPlayerID
+    //game.players[0].life += hardware.update_encoder(); // Update player 1's life based on encoder input
+    game.players[0].life = hardware.update_encoder(); // Update player 1's life based on encoder input
     // Check if any player's life total has changed
     for (int i = 0; i < game.playerCount; i++) {
         if (previousLife[i] != game.players[i].life) {
@@ -77,6 +87,9 @@ void loop() {
         }
     }
 
+    // check if turn end button is pressed
+    // TEMP CODE REPLACE WITH LOGIC THAT IGNORES IF NOT YOUR TURN
+    // CHANGE function name update button is confusing
     if (hardware.update_button()){
         temp += 1;        
         currentTurnPlayerID = temp;
@@ -92,8 +105,17 @@ void loop() {
         needsRedraw = true;                          // Trigger redraw
     }
 
+    // check if it is your turn and turn on/off LEDs
+    // technically this send LED ON signal every loop- better way?
+    if (currentTurnPlayerID == game.myPlayerID) {
+        output.update(HIGH);  // Turn on LED or buzzer for your turn
+    } else {
+        output.update(LOW);  // Turn off LED or buzzer
+    }
+
     // Only update the display if life totals or turn ownership changed
-    if (needsRedraw) {
+    // screen refresh rate locked to X ms
+    if ( (needsRedraw) && (millis() - previousMillis > interval) ) {        
         display.begin();  // Wake up ePaper display
 
         display.drawLifeCounter(
@@ -106,7 +128,10 @@ void loop() {
         );
 
         display.sleep();  // Put display back to sleep after update
+        previousMillis = millis(); // Update the last time the display was updated
     }
 
-    delay(100); // Small delay to prevent tight loop execution
+
+
+    //delay(100); // Small delay to prevent tight loop execution
 }
