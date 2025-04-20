@@ -11,26 +11,44 @@
 	//button_arcade = 
 // }
 
-InputManager::InputManager() : 
-	led_button(EPD_BUTTON), encoder_button(EPD_BUTTON_ENCODER) {
+InputManager::InputManager():
+	led_button(EPD_BUTTON),
+	encoder_button(EPD_BUTTON_ENCODER),
+	encoder() 
+	{
 	// Constructor
 	// change = 0;
 	// oldPosition = 0;
 	// newPosition = 0;
 	// pressDuration = 0;
 	// mode = 0; // future
+
+	// ROTARY ENCODER SETUP
+	encoder.attachHalfQuad( EPD_DT, EPD_CLK ); 	//attachFullQuad option available
+	//encoder.attachFullQuad( EPD_DT, EPD_CLK ); 	//attachFullQuad option available
+	encoder.clearCount(); // reset encoder count to 0
+
+	oldPosition = 0; // initial position
+	newPosition = 0;
+	delta = 0;
+
 	isPressed = false;
 	// isLongPress = false;
 	// pressTime = 0;
 }
+
 void InputManager::begin(){
 	//(int DT, int CLK) {
 		
-	// ROTARY ENCODER SETUP
-	encoder.attachHalfQuad( EPD_DT, EPD_CLK ); 	//attachFullQuad option available
-	encoder.clearCount(); // reset encoder count to 0
-	encoder.setCount( 20*2 ); // replace with lifecount?
+	//encoder.setCount( 20*2 ); // replace with lifecount?
+
+	// THIS SHOULDNT DO ANYTHING SINCE I AM USING DELTA
+	encoder.setCount(40); // set initial count to 40 (20 life * 2 for encoder)
+	oldPosition = encoder.getCount()/ 2; // set old position to initial count divided by 2
 	
+	led_button.setDebounceTime(50); // Set debounce time to 50ms
+	encoder_button.setDebounceTime(50); // Set debounce time to 50ms
+
 	//oldPosition = encoder.getCount() / 2;
 	//newPosition = oldPosition;
 	//change = 0;
@@ -44,8 +62,6 @@ void InputManager::begin(){
 	//encoder.setFilter(1023);
 	//ezButton led_button(EPD_BUTTON); // Set the pin for the button
 	//Button led_button(EPD_BUTTON); // Set the pin for the button
-	led_button.setDebounceTime(50); // Set debounce time to 50ms
-	encoder_button.setDebounceTime(50); // Set debounce time to 50ms
 	//led_button.setLongPressTime(2000); // Set long press time to 1000ms
 	//led_button.setPinMode(INPUT_PULLUP); // Set pin mode to INPUT_PULLUP
 
@@ -62,12 +78,15 @@ long InputManager::update_encoder() {
 	// Future implementation
 
 	newPosition = encoder.getCount()/ 2;
-	if (newPosition != oldPosition) {
+	//newPosition = encoder.getCount();
+	delta = newPosition - oldPosition; // calculate delta
+	// if (newPosition != oldPosition) {
+	if (delta != 0) {
 		//change = newPosition - oldPosition;
 		oldPosition = newPosition;
 
-		Serial.print("encoder pos: ");
-		Serial.println(newPosition); // Debug output to monitor life changes
+		// Serial.print("encoder pos: ");
+		// Serial.println(newPosition); // Debug output to monitor life changes
 	}
 //	Serial.println(encoder.getCount()/2); // Debug output to monitor life changes
 
@@ -80,8 +99,8 @@ long InputManager::update_encoder() {
 	// Serial.println(change); // Debug output to monitor life changes
 
 	//change = 1; // debug
-	return newPosition;
-	// return change;
+	//return newPosition;
+	return delta;
 	//return newPosition;
 
 // Do I want to report encoder count or delta count to game state?

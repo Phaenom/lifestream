@@ -30,8 +30,9 @@ int temp = 0;
 
 // experimenting 
 unsigned long previousMillis = 0;  
-unsigned long interval = 1000;      
-
+unsigned long interval = 3000;  // ms    
+unsigned long testUpdate_interval = 1000; // ms
+int test = 0;
 
 
 // Arduino setup() runs once when the device starts
@@ -68,6 +69,8 @@ void setup() {
 	hardware.begin(); // add start HP if that makes sense for encoder
     output.begin(); // Initialize output hardware (LEDs, Buzzer, etc)
 
+    previousMillis = millis(); // Update the last time the display was updated
+    Serial.println("Setup complete");
 
 }
 
@@ -75,13 +78,23 @@ void setup() {
 void loop() {
     bool needsRedraw = false;  // Flag to track if screen update is required
 
-	// TEMPORARY code to test encoder
+    test+= hardware.update_encoder();
+    if ( millis() - previousMillis > interval) {
+        Serial.println("current encoder value: ");  // Debug message
+        Serial.println(test);  // Debug message
+        previousMillis = millis(); // Update the last time the display was updated
+    } 
+        // TEMPORARY code to test encoder
     // replace 0 with currentTurnPlayerID
     //game.players[0].life += hardware.update_encoder(); // Update player 1's life based on encoder input
-    game.players[0].life = hardware.update_encoder(); // Update player 1's life based on encoder input
+    //game.players[0].life += hardware.update_encoder(); // Update player 1's life based on encoder input
     // Check if any player's life total has changed
     for (int i = 0; i < game.playerCount; i++) {
         if (previousLife[i] != game.players[i].life) {
+
+            Serial.print("life change: ");
+            Serial.println(game.players[0].life); // Debug output to monitor life changes
+            
             previousLife[i] = game.players[i].life;  // Update tracked value
             needsRedraw = true;                      // Trigger redraw
         }
@@ -115,23 +128,29 @@ void loop() {
 
     // Only update the display if life totals or turn ownership changed
     // screen refresh rate locked to X ms
-    if ( (needsRedraw) && (millis() - previousMillis > interval) ) {        
-        display.begin();  // Wake up ePaper display
+    if ( (needsRedraw) && (millis() - previousMillis > interval) ) { 
+        Serial.println("health");
+        Serial.println(game.players[0].life);  // Debug message
 
-        display.drawLifeCounter(
-            game.players[0].life,
-            game.players[1].life,
-            game.players[2].life,
-            game.players[3].life,
-            currentTurnPlayerID,  // Who's turn is it
-            game.myPlayerID       // Your player ID
-        );
+        // Serial.println("Updating display...");  // Debug message       
+        // display.begin();  // Wake up ePaper display
 
-        display.sleep();  // Put display back to sleep after update
+        // display.drawLifeCounter(
+        //     game.players[0].life,
+        //     game.players[1].life,
+        //     game.players[2].life,
+        //     game.players[3].life,
+        //     currentTurnPlayerID,  // Who's turn is it
+        //     game.myPlayerID       // Your player ID
+        // );
+
+        // display.sleep();  // Put display back to sleep after update
         previousMillis = millis(); // Update the last time the display was updated
+
+        // Serial.println("updated");  // Debug message       
     }
+    
 
 
-
-    //delay(100); // Small delay to prevent tight loop execution
+    delay(50); // Small delay to prevent tight loop execution
 }

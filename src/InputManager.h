@@ -3,7 +3,10 @@
 #define INPUT_MANAGER_H
 
 #include <ESP32Encoder.h>
+#include <Arduino.h>
 #include <ezButton.h>
+//#include "Config.h"
+
 //#include <Button.h>
 //#include "pitches.h" // how to..l.?
 
@@ -25,9 +28,9 @@ public:
 	
 	// ENCODER STUFF
 	ESP32Encoder encoder;
-	long oldPosition;
-	long newPosition;
-	long change;
+	int64_t oldPosition;
+	int64_t newPosition;
+	int64_t delta;
 
 	
 	// ENCODER BUTTON STUFF
