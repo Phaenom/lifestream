@@ -42,6 +42,7 @@ public:
 	ezButton led_button;
 
 	bool isPressed;
+	bool isReleased;
 	bool isLongPress;
 	long pressTime;
 	long pressDuration;

@@ -124,12 +124,20 @@ bool InputManager::update_button() {
 	// don't really need this. just use *.isReleased()
 	// maybe for long presses?
 	
-	isPressed = false; 
+	// isPressed = false; 
+	// // if (led_button.isReleased() || encoder_button.isReleased()){
+	// if (led_button.isPressed() || encoder_button.isPressed()){		
+	// 	isPressed = true; 
+	// }
+	// return isPressed;
+
+	isReleased = false; 
 	// if (led_button.isReleased() || encoder_button.isReleased()){
-	if (led_button.isPressed() || encoder_button.isPressed()){		
-		isPressed = true; 
+	if (led_button.isReleased() || encoder_button.isReleased()){		
+		isReleased = true; 
 	}
-	return isPressed;
+	return isReleased;
+	// return isPressed;
 }
 
 void InputManager::set_mode(){

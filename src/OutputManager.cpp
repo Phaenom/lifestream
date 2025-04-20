@@ -33,11 +33,16 @@ void OutputManager::begin(){
 // Update function to read inputs each loop
 void OutputManager::update(bool new_state) {
 	// Future implementation
-    if (new_state != led_state) {
-        digitalWrite(EPD_BUTTON_LED, new_state); // Update the button LED state
-        digitalWrite(EPD_ONBOARD_LED, new_state); // Update the onboard LED state
-        led_state = new_state; // Update the stored LED state
-    }   
+
+    digitalWrite(EPD_BUTTON_LED, new_state); // Update the button LED state
+    digitalWrite(EPD_ONBOARD_LED, new_state); // Update the onboard LED state
+
+    // if (new_state != led_state) {
+    //     digitalWrite(EPD_BUTTON_LED, new_state); // Update the button LED state
+    //     digitalWrite(EPD_ONBOARD_LED, new_state); // Update the onboard LED state
+    //     led_state = new_state; // Update the stored LED state
+    // }   
+    
     // if (led_state == HIGH) {
     //     tone(EPD_BUZZ, 440, 100); // Set the buzzer to a frequency of 440Hz for 100ms
     // }    

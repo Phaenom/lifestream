@@ -30,9 +30,10 @@ int temp = 0;
 
 // experimenting 
 unsigned long previousMillis = 0;  
-unsigned long interval = 3000;  // ms    
+unsigned long interval = 1000;  // ms    
 unsigned long testUpdate_interval = 1000; // ms
 int test = 0;
+bool needsRedraw = false; // Flag to track if screen update is required
 
 
 // Arduino setup() runs once when the device starts
@@ -52,7 +53,7 @@ void setup() {
     }
     previousTurnPlayerID = 0;  // Initial turn is with Planeswalker 1
 
-    // Draw the initial screen with player life totals
+    // // Draw the initial screen with player life totals
     display.drawLifeCounter(
         game.players[0].life,
         game.players[1].life,
@@ -62,12 +63,18 @@ void setup() {
         game.myPlayerID       // This device's player ID
     );
 
-    // Put display to sleep after drawing (saves power)
+    // // Put display to sleep after drawing (saves power)
     display.sleep();
 
     // Initialize the hardware inputs
 	hardware.begin(); // add start HP if that makes sense for encoder
-    output.begin(); // Initialize output hardware (LEDs, Buzzer, etc)
+
+    if ( needsRedraw && (currentTurnPlayerID == game.myPlayerID) ) {
+        output.update(HIGH);  // Turn on LED or buzzer for your turn
+
+        //output.begin(); // Initialize output hardware (LEDs, Buzzer, etc)
+    }
+    // INCLUDE LOGIC IN OUTPUT begin to turn LED on for active player
 
     previousMillis = millis(); // Update the last time the display was updated
     Serial.println("Setup complete");
@@ -76,15 +83,19 @@ void setup() {
 
 // Arduino loop() runs repeatedly after setup()
 void loop() {
-    bool needsRedraw = false;  // Flag to track if screen update is required
+    needsRedraw = false;  // is it cool in c++ to initialize this here??
 
-    test+= hardware.update_encoder();
-    if ( millis() - previousMillis > interval) {
-        Serial.println("current encoder value: ");  // Debug message
-        Serial.println(test);  // Debug message
-        previousMillis = millis(); // Update the last time the display was updated
-    } 
-        // TEMPORARY code to test encoder
+    // TEMPORARY code to test encoder
+
+    //test+= hardware.update_encoder();
+    game.players[0].life += hardware.update_encoder(); // Update player 1's life based on encoder input
+
+    // if ( millis() - previousMillis > interval) {
+    //     Serial.println("current health value: ");  // Debug message
+    //     Serial.println(game.players[0].life);  // Debug message
+    //     // Serial.println(test);  // Debug message
+    //     previousMillis = millis(); // Update the last time the display was updated
+    // } 
     // replace 0 with currentTurnPlayerID
     //game.players[0].life += hardware.update_encoder(); // Update player 1's life based on encoder input
     //game.players[0].life += hardware.update_encoder(); // Update player 1's life based on encoder input
@@ -92,8 +103,8 @@ void loop() {
     for (int i = 0; i < game.playerCount; i++) {
         if (previousLife[i] != game.players[i].life) {
 
-            Serial.print("life change: ");
-            Serial.println(game.players[0].life); // Debug output to monitor life changes
+            // Serial.print("life change: ");
+            // Serial.println(game.players[0].life); // Debug output to monitor life changes
             
             previousLife[i] = game.players[i].life;  // Update tracked value
             needsRedraw = true;                      // Trigger redraw
@@ -104,11 +115,13 @@ void loop() {
     // TEMP CODE REPLACE WITH LOGIC THAT IGNORES IF NOT YOUR TURN
     // CHANGE function name update button is confusing
     if (hardware.update_button()){
+        Serial.println("button pressed"); // debug
         temp += 1;        
-        currentTurnPlayerID = temp;
         if (temp > 3){
             temp = 0;
         }
+        currentTurnPlayerID = temp;
+        Serial.println(currentTurnPlayerID); // debug
     } // Get the current turn player ID from the button input
 
     // Check if the turn has changed
@@ -116,38 +129,45 @@ void loop() {
     if (previousTurnPlayerID != currentTurnPlayerID) {
         previousTurnPlayerID = currentTurnPlayerID;  // Update tracked value
         needsRedraw = true;                          // Trigger redraw
+        Serial.println("turn change logic"); // debug
+
     }
 
     // check if it is your turn and turn on/off LEDs
     // technically this send LED ON signal every loop- better way?
-    if (currentTurnPlayerID == game.myPlayerID) {
+    if ( needsRedraw && (currentTurnPlayerID == game.myPlayerID) ) {
         output.update(HIGH);  // Turn on LED or buzzer for your turn
-    } else {
+        Serial.println("player turn"); // debug
+        //Serial.println(currentTurnPlayerID); // debug
+
+    } else if (currentTurnPlayerID != game.myPlayerID) {
         output.update(LOW);  // Turn off LED or buzzer
     }
 
     // Only update the display if life totals or turn ownership changed
     // screen refresh rate locked to X ms
+
+    
     if ( (needsRedraw) && (millis() - previousMillis > interval) ) { 
         Serial.println("health");
         Serial.println(game.players[0].life);  // Debug message
 
-        // Serial.println("Updating display...");  // Debug message       
-        // display.begin();  // Wake up ePaper display
+        Serial.println("Updating display...");  // Debug message       
+        display.begin();  // Wake up ePaper display
 
-        // display.drawLifeCounter(
-        //     game.players[0].life,
-        //     game.players[1].life,
-        //     game.players[2].life,
-        //     game.players[3].life,
-        //     currentTurnPlayerID,  // Who's turn is it
-        //     game.myPlayerID       // Your player ID
-        // );
+        display.drawLifeCounter(
+            game.players[0].life,
+            game.players[1].life,
+            game.players[2].life,
+            game.players[3].life,
+            currentTurnPlayerID,  // Who's turn is it
+            game.myPlayerID       // Your player ID
+        );
 
-        // display.sleep();  // Put display back to sleep after update
+        display.sleep();  // Put display back to sleep after update
         previousMillis = millis(); // Update the last time the display was updated
 
-        // Serial.println("updated");  // Debug message       
+        Serial.println("updated");  // Debug message       
     }
     
 
