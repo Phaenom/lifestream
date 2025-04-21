@@ -1,4 +1,3 @@
-
 #ifndef GAME_STATE_H
 #define GAME_STATE_H
 
@@ -35,5 +34,13 @@ public:
         players[0].isTurn = true;  // Assign first turn to player 0
     }
 };
+
+// Structure to store the host-selected game settings
+// struct GameSettings{
+//     u_int8_t playerCount;   // Store the number of players
+//     int startingLife;       // Life total each player starts with
+//     String gameType;        // Game Format (Standard, Commander, etc...)
+// };
+
 
 #endif
