@@ -1,4 +1,3 @@
-
 #include "DisplayManager.h"
 
 void DisplayManager::begin() {
@@ -18,16 +17,17 @@ void DisplayManager::begin() {
     Paint_NewImage(BlackImage, EPD_2IN9_V2_WIDTH, EPD_2IN9_V2_HEIGHT, 270, WHITE);
 }
 
-void DisplayManager::drawLifeCounter(int lifeP1, int lifeP2, int lifeP3, int lifeP4, int currentTurnPlayerID, int myPlayerID) {
+void DisplayManager::drawLifeCounter(int lifeP1, int lifeP2, int lifeP3, int lifeP4, int currentTurnPlayerID, int myPlayerID, DeviceRole role) {
     Paint_Clear(WHITE);
 
     // Draw MTG Symbol logo at top center
-    drawLogo(250, -5); // Draw MTG symbol at x=70, y=5
+    drawLogo(250, -5); 
 
     Paint_DrawString_EN(10, 5, "LIFESTREAM", &Font16, WHITE, BLACK);
 
-    char buffer[30];
+    char buffer[40];
 
+    // Display life totals for all players with turn indicator
     sprintf(buffer, "Planeswalker 1: %d %s", lifeP1, (currentTurnPlayerID == 0) ? "<-" : "");
     Paint_DrawString_EN(10, 30, buffer, &Font12, WHITE, BLACK);
 
@@ -36,11 +36,20 @@ void DisplayManager::drawLifeCounter(int lifeP1, int lifeP2, int lifeP3, int lif
 
     sprintf(buffer, "    Planeswalker 3: %d %s", lifeP3, (currentTurnPlayerID == 2) ? "<-" : "");
     Paint_DrawString_EN(10, 60, buffer, &Font12, WHITE, BLACK);
+
     sprintf(buffer, "      Planeswalker 4: %d %s", lifeP4, (currentTurnPlayerID == 3) ? "<-" : "");
     Paint_DrawString_EN(10, 75, buffer, &Font12, WHITE, BLACK);
 
-    sprintf(buffer, "You are Planeswalker %d", myPlayerID + 1);
-    Paint_DrawString_EN(10, 100, buffer, &Font16, WHITE, BLACK);
+    // Display player role (HOST / CLIENT)
+    const char* roleStr = "UNKNOWN";
+    if (role == ROLE_HOST) {
+        roleStr = "HOST";
+    } else if (role == ROLE_CLIENT) {
+        roleStr = "CLIENT";
+    }
+
+    sprintf(buffer, "You are Planeswalker %d (%s)", myPlayerID + 1, roleStr);
+    Paint_DrawString_EN(5, 100, buffer, &Font12, WHITE, BLACK);
 
     EPD_2IN9_V2_Display(BlackImage);
     DEV_Delay_ms(500);
