@@ -2,22 +2,48 @@
 #define INPUT_MANAGER_H
 
 #include <Arduino.h>
+#include "IInputManager.h"
 
-// InputManager handles rotary encoder rotation and button presses
-class InputManager {
+/**
+ * InputManager handles rotary encoder input and button press detection.
+ * It tracks rotation changes and distinguishes between short and long button presses.
+ */
+class InputManager : public IInputManager {
 public:
-	void begin();	// Initialize encoder and button GPIO
-	void update();	// Update encoder state; call regularly
-	int getRotation();	// Returns rotary movement since last call
-	bool wasButtonPressed();	// Returns true once per button press
+    /**
+     * Initializes the input manager, setting up necessary hardware or state.
+     * Typically called once during system startup.
+     */
+    void begin() override;
+
+    /**
+     * Updates the input manager state by reading inputs.
+     * Should be called regularly in the main loop.
+     */
+    void update() override;
+
+    /**
+     * Returns the amount of rotation detected since the last update.
+     * Positive or negative values indicate direction.
+     */
+    int getRotation() override;
+
+    /**
+     * Returns true if a short button press was detected since the last update.
+     */
+    bool wasButtonShortPressed() override;
+
+    /**
+     * Returns true if a long button press was detected since the last update.
+     */
+    bool wasButtonLongPressed() override;
 
 private:
-	int lastEncoderState = 0;
-	int rotationDelta = 0;
-	bool buttonPressed = false;
-
-	void IRAM_ATTR onEncoderInterrupt();	// ISR for encoder pin change
-	void IRAM_ATTR onButtonInterrupt();		// ISR for button press
+    int rotationDelta = 0;             // Tracks the change in rotation since last update
+    bool buttonHeld = false;           // Indicates if the button is currently held down
+    unsigned long buttonPressTime = 0; // Timestamp when the button was pressed
+    bool shortPressDetected = false;  // Flag set when a short press is detected
+    bool longPressDetected = false;   // Flag set when a long press is detected
 };
 
-#endif // INPUT_MANAGER_H
+#endif

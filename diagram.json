@@ -2,7 +2,21 @@
   "version": 1,
   "author": "Wade Casper",
   "editor": "wokwi",
-  "parts": [ { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 0, "left": 0, "attrs": {} } ],
-  "connections": [ [ "esp:TX", "$serialMonitor:RX", "", [] ], [ "esp:RX", "$serialMonitor:TX", "", [] ] ],
+  "parts": [
+    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 115.2, "left": -129.56, "attrs": {} },
+    { "type": "board-epaper-2in9", "id": "epd1", "top": -85.8, "left": 80.88, "attrs": {} }
+  ],
+  "connections": [
+    [ "esp:TX", "$serialMonitor:RX", "", [] ],
+    [ "esp:RX", "$serialMonitor:TX", "", [] ],
+    [ "epd1:VCC", "esp:3V3", "red", [ "h-297.6", "v134.33" ] ],
+    [ "epd1:GND", "esp:GND.1", "white", [ "h-288", "v249.53" ] ],
+    [ "epd1:DIN", "esp:14", "blue", [ "h-307.2", "v249.53" ] ],
+    [ "epd1:CLK", "esp:13", "green", [ "h-316.8", "v287.93" ] ],
+    [ "epd1:CS", "esp:15", "gold", [ "h-326.4", "v403.2", "h240", "v-96" ] ],
+    [ "epd1:DC", "esp:27", "orange", [ "h-336", "v268.8" ] ],
+    [ "epd1:RST", "esp:26", "red", [ "h-345.6", "v268.8" ] ],
+    [ "epd1:BUSY", "esp:25", "#8f4814", [ "h-355.2", "v268.8" ] ]
+  ],
   "dependencies": {}
 }

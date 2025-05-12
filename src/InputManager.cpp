@@ -1,81 +1,89 @@
+// InputManager.cpp
+// This source file implements the InputManager class, which handles rotary encoder input and button press detection.
+// It manages encoder rotation counting via interrupts and distinguishes between short and long button presses.
+
 #include "InputManager.h"
 
-#define USE_MOCK_INPUT  // Enable mock mode
-
-#ifdef USE_MOCK_INPUT
-
-void InputManager::begin() {
-    Serial.println("\n[Mock] InputManager initialized.");
-}
-
-void InputManager::update() {
-    if (Serial.available()) {
-        char ch = Serial.read();
-        if (ch == 'a') rotationDelta--;     // Rotate counter-clockwise
-        if (ch == 'd') rotationDelta++;     // Rotate clockwise
-        if (ch == 'b') buttonPressed = true; // Simulate button press
-    }
-}
-
-int InputManager::getRotation() {
-    int delta = rotationDelta;
-    rotationDelta = 0;
-    return delta;
-}
-
-bool InputManager::wasButtonPressed() {
-    bool pressed = buttonPressed;
-    buttonPressed = false;
-    return pressed;
-}
-
-#else
-
+// Pin connected to rotary encoder output A
 const int ENCODER_PIN_A = 34;
+// Pin connected to rotary encoder output B
 const int ENCODER_PIN_B = 35;
+// Pin connected to the push button
 const int BUTTON_PIN    = 32;
 
+// Volatile variable to store the encoder position updated in ISR
 volatile int encoderPosition = 0;
-volatile bool buttonFlag = false;
 
+// Interrupt Service Routine to handle encoder rotation changes
+// Increments or decrements encoderPosition based on the state of encoder pins
 void IRAM_ATTR encoderISR() {
     int a = digitalRead(ENCODER_PIN_A);
     int b = digitalRead(ENCODER_PIN_B);
     encoderPosition += (a == b) ? 1 : -1;
 }
 
-void IRAM_ATTR buttonISR() {
-    buttonFlag = true;
-}
-
 void InputManager::begin() {
+    // Configure encoder pins as input with pull-up resistors
     pinMode(ENCODER_PIN_A, INPUT_PULLUP);
     pinMode(ENCODER_PIN_B, INPUT_PULLUP);
+    // Configure button pin as input with pull-up resistor
     pinMode(BUTTON_PIN,    INPUT_PULLUP);
 
+    // Attach interrupt to encoder pin A to detect changes and call encoderISR
     attachInterrupt(digitalPinToInterrupt(ENCODER_PIN_A), encoderISR, CHANGE);
-    attachInterrupt(digitalPinToInterrupt(BUTTON_PIN),    buttonISR, FALLING);
 }
 
 void InputManager::update() {
+    // Disable interrupts to safely read and reset encoderPosition
     noInterrupts();
+    // Capture the current encoder rotation delta and reset it
     rotationDelta = encoderPosition;
     encoderPosition = 0;
-    buttonPressed = buttonFlag;
-    buttonFlag = false;
+    // Re-enable interrupts
     interrupts();
+
+    // Static variable to remember last button state across calls
+    static bool lastButton = HIGH;
+    // Read current button state
+    bool currentButton = digitalRead(BUTTON_PIN);
+    // Get current time in milliseconds
+    unsigned long now = millis();
+
+    // Detect button press (transition from HIGH to LOW)
+    if (currentButton == LOW && lastButton == HIGH) {
+        buttonPressTime = now;  // Record time when button was pressed
+        buttonHeld = true;
+    }
+
+    // Detect button release (transition from LOW to HIGH)
+    if (currentButton == HIGH && lastButton == LOW) {
+        unsigned long pressTime = now - buttonPressTime;  // Calculate press duration
+        if (pressTime >= 1000) longPressDetected = true;  // Long press if held >= 1000 ms
+        else shortPressDetected = true;                   // Otherwise, short press
+        buttonHeld = false;
+    }
+
+    // Update last button state for next update cycle
+    lastButton = currentButton;
 }
 
+// Returns the amount of rotation detected since the last call and resets the delta
 int InputManager::getRotation() {
     int delta = rotationDelta;
     rotationDelta = 0;
     return delta;
 }
 
-bool InputManager::wasButtonPressed() {
-    bool pressed = buttonPressed;
-    buttonPressed = false;
-    return pressed;
+// Returns true if a short button press was detected since the last call, then clears the flag
+bool InputManager::wasButtonShortPressed() {
+    bool result = shortPressDetected;
+    shortPressDetected = false;
+    return result;
 }
 
-#endif
+// Returns true if a long button press was detected since the last call, then clears the flag
+bool InputManager::wasButtonLongPressed() {
+    bool result = longPressDetected;
+    longPressDetected = false;
+    return result;
+}

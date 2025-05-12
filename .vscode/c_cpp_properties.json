@@ -9,6 +9,8 @@
             "name": "PlatformIO",
             "includePath": [
                 "/Users/wade.casper/Workspace/lifestream/src",
+                "/Users/wade.casper/Workspace/lifestream/lib/waveshare",
+                "/Users/wade.casper/.platformio/packages/framework-arduinoespressif32/libraries/Wire/src",
                 "/Users/wade.casper/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/include/newlib/platform_include",
                 "/Users/wade.casper/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/include/freertos/include",
                 "/Users/wade.casper/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/include/freertos/include/esp_additions/freertos",
@@ -237,13 +239,14 @@
                 "/Users/wade.casper/.platformio/packages/framework-arduinoespressif32/libraries/WiFi/src",
                 "/Users/wade.casper/.platformio/packages/framework-arduinoespressif32/libraries/WiFiClientSecure/src",
                 "/Users/wade.casper/.platformio/packages/framework-arduinoespressif32/libraries/WiFiProv/src",
-                "/Users/wade.casper/.platformio/packages/framework-arduinoespressif32/libraries/Wire/src",
                 ""
             ],
             "browse": {
                 "limitSymbolsToIncludedHeaders": true,
                 "path": [
                     "/Users/wade.casper/Workspace/lifestream/src",
+                    "/Users/wade.casper/Workspace/lifestream/lib/waveshare",
+                    "/Users/wade.casper/.platformio/packages/framework-arduinoespressif32/libraries/Wire/src",
                     "/Users/wade.casper/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/include/newlib/platform_include",
                     "/Users/wade.casper/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/include/freertos/include",
                     "/Users/wade.casper/.platformio/packages/framework-arduinoespressif32/tools/sdk/esp32/include/freertos/include/esp_additions/freertos",
@@ -472,7 +475,6 @@
                     "/Users/wade.casper/.platformio/packages/framework-arduinoespressif32/libraries/WiFi/src",
                     "/Users/wade.casper/.platformio/packages/framework-arduinoespressif32/libraries/WiFiClientSecure/src",
                     "/Users/wade.casper/.platformio/packages/framework-arduinoespressif32/libraries/WiFiProv/src",
-                    "/Users/wade.casper/.platformio/packages/framework-arduinoespressif32/libraries/Wire/src",
                     ""
                 ]
             },
