@@ -1,149 +1,81 @@
 #include "InputManager.h"
-#include "Config.h"
 
-//#include <ESP32Encoder.h> // https://github.com/madhephaestus/ESP32Encoder.git 
+#define USE_MOCK_INPUT  // Enable mock mode
 
+#ifdef USE_MOCK_INPUT
 
-//DisplayManager::begin
-
-// InputManager::InputManager(){
-
-	//button_arcade = 
-// }
-
-InputManager::InputManager():
-	led_button(EPD_BUTTON),
-	encoder_button(EPD_BUTTON_ENCODER),
-	encoder() 
-	{
-	// Constructor
-	// change = 0;
-	// oldPosition = 0;
-	// newPosition = 0;
-	// pressDuration = 0;
-	// mode = 0; // future
-
-	// ROTARY ENCODER SETUP
-	encoder.attachHalfQuad( EPD_DT, EPD_CLK ); 	//attachFullQuad option available
-	//encoder.attachFullQuad( EPD_DT, EPD_CLK ); 	//attachFullQuad option available
-	encoder.clearCount(); // reset encoder count to 0
-
-	oldPosition = 0; // initial position
-	newPosition = 0;
-	delta = 0;
-
-	isPressed = false;
-	// isLongPress = false;
-	// pressTime = 0;
+void InputManager::begin() {
+    Serial.println("\n[Mock] InputManager initialized.");
 }
 
-void InputManager::begin(){
-	//(int DT, int CLK) {
-		
-	//encoder.setCount( 20*2 ); // replace with lifecount?
-
-	// THIS SHOULDNT DO ANYTHING SINCE I AM USING DELTA
-	encoder.setCount(40); // set initial count to 40 (20 life * 2 for encoder)
-	oldPosition = encoder.getCount()/ 2; // set old position to initial count divided by 2
-	
-	led_button.setDebounceTime(50); // Set debounce time to 50ms
-	encoder_button.setDebounceTime(50); // Set debounce time to 50ms
-
-	//oldPosition = encoder.getCount() / 2;
-	//newPosition = oldPosition;
-	//change = 0;
-
-	//mode = 0;
-	
-	// encoder button input
-	//encoder_button 
-	
-	//ESP32Encoder::useInternalWeakPullResistors = puType::up;
-	//encoder.setFilter(1023);
-	//ezButton led_button(EPD_BUTTON); // Set the pin for the button
-	//Button led_button(EPD_BUTTON); // Set the pin for the button
-	//led_button.setLongPressTime(2000); // Set long press time to 1000ms
-	//led_button.setPinMode(INPUT_PULLUP); // Set pin mode to INPUT_PULLUP
-
-	//encoder_button.setPinMode(INPUT_PULLUP); // Set pin mode to INPUT_PULLUP
-	//encoder_button.setPin(EPD_BUTTON); // Set the pin for the button	
-	
-
-	// LED BUTTON SET UP
-
+void InputManager::update() {
+    if (Serial.available()) {
+        char ch = Serial.read();
+        if (ch == 'a') rotationDelta--;     // Rotate counter-clockwise
+        if (ch == 'd') rotationDelta++;     // Rotate clockwise
+        if (ch == 'b') buttonPressed = true; // Simulate button press
+    }
 }
 
-// Update function to read inputs each loop
-long InputManager::update_encoder() {
-	// Future implementation
-
-	newPosition = encoder.getCount()/ 2;
-	//newPosition = encoder.getCount();
-	delta = newPosition - oldPosition; // calculate delta
-	// if (newPosition != oldPosition) {
-	if (delta != 0) {
-		//change = newPosition - oldPosition;
-		oldPosition = newPosition;
-
-		// Serial.print("encoder pos: ");
-		// Serial.println(newPosition); // Debug output to monitor life changes
-	}
-//	Serial.println(encoder.getCount()/2); // Debug output to monitor life changes
-
-	// change = 0;
-	// if (newPosition != oldPosition) {
-	// 	change = newPosition - oldPosition;
-	// 	oldPosition = newPosition;
-	// }
-	// Serial.print("encoder change: ");
-	// Serial.println(change); // Debug output to monitor life changes
-
-	//change = 1; // debug
-	//return newPosition;
-	return delta;
-	//return newPosition;
-
-// Do I want to report encoder count or delta count to game state?
-// risks either way?
-
+int InputManager::getRotation() {
+    int delta = rotationDelta;
+    rotationDelta = 0;
+    return delta;
 }
 
-// long InputManager::update_encoder() {
-// 	return encoder.getCount()/2; // return encoder count divided by 2
-// }
-
-
-bool InputManager::update_button() {
-	// Check if the button is pressed 
-	//isPressed = encoder_button.isReleased();
-
-	// updates button state
-	led_button.loop();
-	encoder_button.loop();
-
-	// don't really need this. just use *.isReleased()
-	// maybe for long presses?
-	
-	// isPressed = false; 
-	// // if (led_button.isReleased() || encoder_button.isReleased()){
-	// if (led_button.isPressed() || encoder_button.isPressed()){		
-	// 	isPressed = true; 
-	// }
-	// return isPressed;
-
-	isReleased = false; 
-	// if (led_button.isReleased() || encoder_button.isReleased()){
-	if (led_button.isReleased() || encoder_button.isReleased()){		
-		isReleased = true; 
-	}
-	return isReleased;
-	// return isPressed;
+bool InputManager::wasButtonPressed() {
+    bool pressed = buttonPressed;
+    buttonPressed = false;
+    return pressed;
 }
 
-void InputManager::set_mode(){
-	mode = 0; // future - to rotate between HP and PSN
+#else
+
+const int ENCODER_PIN_A = 34;
+const int ENCODER_PIN_B = 35;
+const int BUTTON_PIN    = 32;
+
+volatile int encoderPosition = 0;
+volatile bool buttonFlag = false;
+
+void IRAM_ATTR encoderISR() {
+    int a = digitalRead(ENCODER_PIN_A);
+    int b = digitalRead(ENCODER_PIN_B);
+    encoderPosition += (a == b) ? 1 : -1;
 }
 
-void InputManager::reset(){
-	encoder.clearCount();
+void IRAM_ATTR buttonISR() {
+    buttonFlag = true;
 }
+
+void InputManager::begin() {
+    pinMode(ENCODER_PIN_A, INPUT_PULLUP);
+    pinMode(ENCODER_PIN_B, INPUT_PULLUP);
+    pinMode(BUTTON_PIN,    INPUT_PULLUP);
+
+    attachInterrupt(digitalPinToInterrupt(ENCODER_PIN_A), encoderISR, CHANGE);
+    attachInterrupt(digitalPinToInterrupt(BUTTON_PIN),    buttonISR, FALLING);
+}
+
+void InputManager::update() {
+    noInterrupts();
+    rotationDelta = encoderPosition;
+    encoderPosition = 0;
+    buttonPressed = buttonFlag;
+    buttonFlag = false;
+    interrupts();
+}
+
+int InputManager::getRotation() {
+    int delta = rotationDelta;
+    rotationDelta = 0;
+    return delta;
+}
+
+bool InputManager::wasButtonPressed() {
+    bool pressed = buttonPressed;
+    buttonPressed = false;
+    return pressed;
+}
+
+#endif

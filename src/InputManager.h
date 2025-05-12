@@ -1,62 +1,23 @@
-
 #ifndef INPUT_MANAGER_H
 #define INPUT_MANAGER_H
 
-#include <ESP32Encoder.h>
 #include <Arduino.h>
-#include <ezButton.h>
-//#include "Config.h"
 
-//#include <Button.h>
-//#include "pitches.h" // how to..l.?
-
-/*
-  InputManager Class (Stub)
-  Designed to handle inputs from Rotary Encoder and Buttons.
-  Currently empty for future expansion.
-*/
-
+// InputManager handles rotary encoder rotation and button presses
 class InputManager {
-
-// private:
-	// long oldPosition;
-	// long newPosition;
-
 public:
-	InputManager(); // Constructor
-	// class parameters
-	
-	// ENCODER STUFF
-	ESP32Encoder encoder;
-	int64_t oldPosition;
-	int64_t newPosition;
-	int64_t delta;
+	void begin();	// Initialize encoder and button GPIO
+	void update();	// Update encoder state; call regularly
+	int getRotation();	// Returns rotary movement since last call
+	bool wasButtonPressed();	// Returns true once per button press
 
-	
-	// ENCODER BUTTON STUFF
-	ezButton encoder_button;
-	int mode;	
+private:
+	int lastEncoderState = 0;
+	int rotationDelta = 0;
+	bool buttonPressed = false;
 
-	// LED BUTTON STUFF
-	//Button led_button;
-	ezButton led_button;
-
-	bool isPressed;
-	bool isReleased;
-	bool isLongPress;
-	long pressTime;
-	long pressDuration;
-
-
-    // Setup hardware for inputs
-    void begin();//(int DT, int CLK);
-
-    // Update function to read inputs each loop
-    long update_encoder();
-	bool update_button();
-	void set_mode();
-	void reset();
-
+	void IRAM_ATTR onEncoderInterrupt();	// ISR for encoder pin change
+	void IRAM_ATTR onButtonInterrupt();		// ISR for button press
 };
 
-#endif
+#endif // INPUT_MANAGER_H
