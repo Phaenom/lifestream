@@ -13,13 +13,13 @@ public:
     virtual void update() = 0;
 
     // Get the current rotation input value.
-    virtual int getRotation() = 0;
+    virtual int getRotation() const = 0;
 
     // Check if the input button was short pressed.
-    virtual bool wasButtonShortPressed() = 0;
+    virtual bool wasButtonShortPressed() const = 0;
 
     // Check if the input button was long pressed.
-    virtual bool wasButtonLongPressed() = 0;
+    virtual bool wasButtonLongPressed() const = 0;
 
     virtual ~IInputManager() {}
 };

@@ -2,6 +2,7 @@
 // This source file implements the InputManager class, which handles rotary encoder input and button press detection.
 // It manages encoder rotation counting via interrupts and distinguishes between short and long button presses.
 
+#include <Arduino.h>
 #include "InputManager.h"
 
 // Pin connected to rotary encoder output A
@@ -42,6 +43,8 @@ void InputManager::update() {
     // Re-enable interrupts
     interrupts();
 
+    Serial.printf("[InputManager] Rotation delta: %d\n", rotationDelta);
+
     // Static variable to remember last button state across calls
     static bool lastButton = HIGH;
     // Read current button state
@@ -53,13 +56,19 @@ void InputManager::update() {
     if (currentButton == LOW && lastButton == HIGH) {
         buttonPressTime = now;  // Record time when button was pressed
         buttonHeld = true;
+        Serial.println("[InputManager] Button pressed.");
     }
 
     // Detect button release (transition from LOW to HIGH)
     if (currentButton == HIGH && lastButton == LOW) {
         unsigned long pressTime = now - buttonPressTime;  // Calculate press duration
-        if (pressTime >= 1000) longPressDetected = true;  // Long press if held >= 1000 ms
-        else shortPressDetected = true;                   // Otherwise, short press
+        if (pressTime >= 1000) {
+            longPressDetected = true;  // Long press if held >= 1000 ms
+            Serial.printf("[InputManager] Button released after %lu ms (long press)\n", pressTime);
+        } else {
+            shortPressDetected = true;                   // Otherwise, short press
+            Serial.printf("[InputManager] Button released after %lu ms (short press)\n", pressTime);
+        }
         buttonHeld = false;
     }
 
@@ -68,21 +77,21 @@ void InputManager::update() {
 }
 
 // Returns the amount of rotation detected since the last call and resets the delta
-int InputManager::getRotation() {
+int InputManager::getRotation() const {
     int delta = rotationDelta;
     rotationDelta = 0;
     return delta;
 }
 
 // Returns true if a short button press was detected since the last call, then clears the flag
-bool InputManager::wasButtonShortPressed() {
+bool InputManager::wasButtonShortPressed() const {
     bool result = shortPressDetected;
     shortPressDetected = false;
     return result;
 }
 
 // Returns true if a long button press was detected since the last call, then clears the flag
-bool InputManager::wasButtonLongPressed() {
+bool InputManager::wasButtonLongPressed() const {
     bool result = longPressDetected;
     longPressDetected = false;
     return result;

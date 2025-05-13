@@ -8,16 +8,16 @@ class SimulationInputManager : public IInputManager {
 public:
     void begin() override;
     void update() override;
-    int getRotation() override;
-    bool wasButtonShortPressed() override;
-    bool wasButtonLongPressed() override;
+    int getRotation() const override;
+    bool wasButtonShortPressed() const override;
+    bool wasButtonLongPressed() const override;
 
 private:
-    int rotationDelta = 0;
+    mutable int rotationDelta = 0;
     unsigned long buttonPressTime = 0;
     bool buttonHeld = false;
-    bool shortPressDetected = false;
-    bool longPressDetected = false;
+    mutable bool shortPressDetected = false;
+    mutable bool longPressDetected = false;
 };
 
 #endif

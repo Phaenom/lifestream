@@ -31,7 +31,7 @@ void setup() {
     device.assumeHostRole();   // No host found, assume host role
     gameSetup.begin();         // Configure game settings (players, starting life)
   } else {
-    device.assumePlayerRole(); // Host found, assume player role and wait for parameters
+    device.assumePlayerRole(1); // Host found, assume player role and wait for parameters
     // Wait to receive game parameters from the host
   }
 

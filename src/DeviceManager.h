@@ -5,7 +5,17 @@
 
 class DeviceManager {
 public:
-    void begin();  // Initialize module
+    void begin();
+
+    void assumeHostRole();
+    void assumePlayerRole(uint8_t id);
+
+    bool isHost() const;
+    uint8_t getPlayerId() const;
+
+private:
+    bool host = false;
+    uint8_t playerId = 0;
 };
 
 #endif // DEVICEMANAGER_H

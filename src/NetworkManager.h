@@ -5,9 +5,9 @@
 #include <esp_now.h>
 #include "DisplayManager.h"
 
-constexpr uint8_t PACKET_TYPE_SETUP = 0;
+constexpr uint8_t PACKET_TYPE_SETUP         = 0;
 constexpr uint8_t PACKET_TYPE_PLAYER_UPDATE = 1;
-constexpr uint8_t PACKET_TYPE_TURN_REQUEST = 2;
+constexpr uint8_t PACKET_TYPE_TURN_REQUEST  = 2;
 
 #pragma pack(push, 1)
 struct GameSyncPacket {
@@ -27,6 +27,7 @@ public:
     void sendGameState(uint8_t playerId, const PlayerState& state);
     void sendGameSetup(uint8_t playerCount, uint8_t startingLife);
     void sendTurnAdvanceRequest(uint8_t playerId);
+    bool hasHost() const;
 };
 
 #endif

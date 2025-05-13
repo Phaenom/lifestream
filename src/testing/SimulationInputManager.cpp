@@ -27,19 +27,19 @@ void SimulationInputManager::update() {
     }
 }
 
-int SimulationInputManager::getRotation() {
+int SimulationInputManager::getRotation() const {
     int delta = rotationDelta;
     rotationDelta = 0;
     return delta;
 }
 
-bool SimulationInputManager::wasButtonShortPressed() {
+bool SimulationInputManager::wasButtonShortPressed() const {
     bool result = shortPressDetected;
     shortPressDetected = false;
     return result;
 }
 
-bool SimulationInputManager::wasButtonLongPressed() {
+bool SimulationInputManager::wasButtonLongPressed() const {
     bool result = longPressDetected;
     longPressDetected = false;
     return result;

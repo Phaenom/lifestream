@@ -16,6 +16,7 @@ public:
 
     int getCurrentTurnPlayer() const;
     int getPlayerCount() const;
+    void updateRemotePlayer(uint8_t id, const PlayerState& state);
 
 private:
     PlayerState players[4];      // All players' states

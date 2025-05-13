@@ -26,24 +26,24 @@ public:
      * Returns the amount of rotation detected since the last update.
      * Positive or negative values indicate direction.
      */
-    int getRotation() override;
+    int getRotation() const override;
 
     /**
      * Returns true if a short button press was detected since the last update.
      */
-    bool wasButtonShortPressed() override;
+    bool wasButtonShortPressed() const override;
 
     /**
      * Returns true if a long button press was detected since the last update.
      */
-    bool wasButtonLongPressed() override;
+    bool wasButtonLongPressed() const override;
 
 private:
-    int rotationDelta = 0;             // Tracks the change in rotation since last update
+    mutable int rotationDelta = 0;             // Tracks the change in rotation since last update
     bool buttonHeld = false;           // Indicates if the button is currently held down
     unsigned long buttonPressTime = 0; // Timestamp when the button was pressed
-    bool shortPressDetected = false;  // Flag set when a short press is detected
-    bool longPressDetected = false;   // Flag set when a long press is detected
+    mutable bool shortPressDetected = false;  // Flag set when a short press is detected
+    mutable bool longPressDetected = false;   // Flag set when a long press is detected
 };
 
 #endif

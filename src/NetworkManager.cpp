@@ -7,11 +7,8 @@ extern GameSetup gameSetup;
 extern GameState gameState;
 extern DeviceManager device;
 
-constexpr uint8_t PACKET_TYPE_SETUP = 0;
-constexpr uint8_t PACKET_TYPE_PLAYER_UPDATE = 1;
-constexpr uint8_t PACKET_TYPE_TURN_REQUEST = 2;
-
 void onDataReceived(const uint8_t *mac, const uint8_t *data, int len) {
+    Serial.printf("[NetworkManager] Packet received from MAC: %02X:%02X:%02X:%02X:%02X:%02X\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     if (len < sizeof(GameSyncPacket)) return;
 
     GameSyncPacket packet;
@@ -20,12 +17,12 @@ void onDataReceived(const uint8_t *mac, const uint8_t *data, int len) {
     if (packet.playerId >= 4) return;
 
     if (packet.type == PACKET_TYPE_SETUP) {
-        Serial.printf("Received setup packet: playerCount=%d, life=%d\n", packet.playerCount, packet.life);
+        Serial.printf("[NetworkManager] Received setup packet: playerCount=%d, life=%d\n", packet.playerCount, packet.life);
         gameSetup.setFromNetwork(packet.playerCount, packet.life);
         gameState.begin(device.getPlayerId(), packet.life);
 
     } else if (packet.type == PACKET_TYPE_PLAYER_UPDATE) {
-        Serial.printf("Received player update packet: playerId=%d, life=%d, poison=%d, isTurn=%d, eliminated=%d\n",
+        Serial.printf("[NetworkManager] Received player update packet: playerId=%d, life=%d, poison=%d, isTurn=%d, eliminated=%d\n",
                       packet.playerId, packet.life, packet.poison, packet.isTurn, packet.eliminated);
         PlayerState newState;
         newState.life = packet.life;
@@ -36,7 +33,7 @@ void onDataReceived(const uint8_t *mac, const uint8_t *data, int len) {
         gameState.updateRemotePlayer(packet.playerId, newState);
 
     } else if (packet.type == PACKET_TYPE_TURN_REQUEST) {
-        Serial.printf("Received turn request packet: playerId=%d\n", packet.playerId);
+        Serial.printf("[NetworkManager] Received turn request packet: playerId=%d\n", packet.playerId);
         if (device.isHost() && packet.playerId == gameState.getCurrentTurnPlayer()) {
             gameState.nextTurn();
         }
@@ -49,6 +46,7 @@ void NetworkManager::begin() {
         return;
     }
     esp_now_register_recv_cb(onDataReceived);
+    Serial.println("[NetworkManager] ESP-NOW initialized and callback registered.");
 }
 
 void NetworkManager::sendGameSetup(uint8_t playerCount, uint8_t startingLife) {
@@ -58,7 +56,7 @@ void NetworkManager::sendGameSetup(uint8_t playerCount, uint8_t startingLife) {
     packet.life = startingLife;
 
     esp_err_t result = esp_now_send(nullptr, (uint8_t*)&packet, sizeof(packet));
-    Serial.printf("sendGameSetup result: %d\n", result);
+    Serial.printf("[NetworkManager] sendGameSetup result: %d\n", result);
 }
 
 void NetworkManager::sendGameState(uint8_t playerId, const PlayerState& state) {
@@ -71,7 +69,7 @@ void NetworkManager::sendGameState(uint8_t playerId, const PlayerState& state) {
     packet.eliminated = state.eliminated;
 
     esp_err_t result = esp_now_send(nullptr, (uint8_t*)&packet, sizeof(packet));
-    Serial.printf("sendGameState result: %d\n", result);
+    Serial.printf("[NetworkManager] sendGameState result: %d\n", result);
 }
 
 void NetworkManager::sendTurnAdvanceRequest(uint8_t playerId) {
@@ -80,7 +78,7 @@ void NetworkManager::sendTurnAdvanceRequest(uint8_t playerId) {
     packet.playerId = playerId;
 
     esp_err_t result = esp_now_send(nullptr, (uint8_t*)&packet, sizeof(packet));
-    Serial.printf("sendTurnAdvanceRequest result: %d\n", result);
+    Serial.printf("[NetworkManager] sendTurnAdvanceRequest result: %d\n", result);
 }
 
 bool NetworkManager::hasHost() const {
