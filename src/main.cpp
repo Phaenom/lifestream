@@ -27,26 +27,22 @@ void setup() {
 
   input->begin();              // Initialize input system
 
-  delay(500);                  // Allow time for display hardware to initialize
-  display.begin();             // Initialize display module
-
-  delay(500);                  // Allow battery sensor to stabilize
-  battery.begin();             // Initialize battery monitoring
-
-  delay(500);                  // Prepare device-specific components
-  device.begin();              // Initialize device manager
-
-  delay(500);                  // Ensure EEPROM is ready for access
-  eeprom.begin();              // Initialize EEPROM manager
-
-  delay(500);                  // Setup network hardware and connections
-  network.begin();             // Initialize network manager
+  if (!network.hasHost()) {
+    device.assumeHostRole();   // No host found, assume host role
+    gameSetup.begin();         // Configure game settings (players, starting life)
+  } else {
+    device.assumePlayerRole(); // Host found, assume player role and wait for parameters
+    // Wait to receive game parameters from the host
+  }
 
   delay(500);                  // Prepare game setup environment
-  gameSetup.begin();           // Initialize game setup module
+
+  gameState.begin(device.getPlayerId(), gameSetup.getStartingLife());
+  for (int id = 0; id < gameSetup.getPlayerCount(); ++id) {
+    display.renderPlayerState(id, gameState.getPlayerState(id));
+  }
 
   delay(500);                  // Initialize game state tracking
-  gameState.begin();           // Initialize game state manager
 }
 
 void loop() {
@@ -62,7 +58,10 @@ void loop() {
   }
 
   if (input->wasButtonLongPressed()) {
-    Serial.println("Long press detected");   // Handle long button press action
+    Serial.println("Long press detected");
+    if (gameState.getPlayerState(device.getPlayerId()).isTurn) {
+      network.sendTurnAdvanceRequest(device.getPlayerId());
+    }
   }
 
   delay(10);                   // Small delay to debounce inputs and reduce CPU usage

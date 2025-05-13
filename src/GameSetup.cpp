@@ -1,6 +1,24 @@
-// GameSetup handles host configuration of player count, type, etc.
 #include "GameSetup.h"
+#include <Arduino.h>
 
 void GameSetup::begin() {
     Serial.println("\n[Init] GameSetup initialized.");
+
+    // TODO: Replace with interactive setup using Display + Input
+    startingLife = 20;
+    playerCount = 4;
+}
+
+int GameSetup::getStartingLife() const {
+    return startingLife;
+}
+
+int GameSetup::getPlayerCount() const {
+    return playerCount;
+}
+
+void GameSetup::setFromNetwork(int players, int life) {
+    playerCount = players;
+    startingLife = life;
+    Serial.printf("[GameSetup] Received config: %d players, %d starting life\n", playerCount, startingLife);
 }

@@ -1,106 +1,84 @@
-// DisplayManager.cpp
-// This source file implements the DisplayManager class responsible for controlling the ePaper display output.
-// It manages drawing life totals, poison counters, and turn indicators on the ePaper display.
-
 #include "DisplayManager.h"
 
-/**
- * Constructor initializes toggle flag and frameBuffer pointer.
- */
-DisplayManager::DisplayManager() : toggle(false), frameBuffer(nullptr) {}
+// Defines screen coordinates for life, poison, and turn marker per player
+struct PlayerDisplayRegion {
+    int lifeX, lifeY;
+    int poisonX, poisonY;
+    int turnX, turnY;
+};
 
-/**
- * Initializes the ePaper display hardware and prepares the frame buffer.
- * Allocates memory for the frame buffer and clears the display.
- */
+const PlayerDisplayRegion PLAYER_LAYOUT[4] = {
+    {10, 40, 10, 80, 100, 10},     // Player 1
+    {130, 40, 130, 80, 220, 10},   // Player 2
+    {10, 120, 10, 160, 100, 100},  // Player 3
+    {130, 120, 130, 160, 220, 100} // Player 4
+};
+
+DisplayManager::DisplayManager() {}
+
 void DisplayManager::begin() {
-    Serial.println("\n[Init] DisplayManager initialized.");
-
-    // Initialize the ePaper display hardware
     EPD_2IN9_V2_Init();
     EPD_2IN9_V2_Clear();
 
-    // Allocate and initialize frame buffer for drawing
-    frameBuffer = (UBYTE *)malloc(EPD_2IN9_V2_WIDTH * EPD_2IN9_V2_HEIGHT / 8);
+    frameBuffer = (UBYTE*)malloc(EPD_2IN9_V2_WIDTH * EPD_2IN9_V2_HEIGHT / 8);
     Paint_NewImage(frameBuffer, EPD_2IN9_V2_WIDTH, EPD_2IN9_V2_HEIGHT, 0, WHITE);
     Paint_SelectImage(frameBuffer);
     Paint_Clear(WHITE);
 }
 
 /**
- * Draws a blinking turn indicator circle at the specified (x, y) coordinates.
- * Uses the toggle flag to alternate between drawing a black filled circle and erasing it.
- * 
- * @param x The x-coordinate of the turn marker center.
- * @param y The y-coordinate of the turn marker center.
+ * Draws a blinking circle to indicate current player's turn.
  */
 void DisplayManager::drawTurnMarker(int x, int y) {
-    // Draw filled circle in black or white depending on toggle state
     if (toggle) {
         Paint_DrawCircle(x, y, 5, BLACK, DOT_PIXEL_1X1, DRAW_FILL_FULL);
     } else {
         Paint_DrawCircle(x, y, 5, WHITE, DOT_PIXEL_1X1, DRAW_FILL_FULL);
     }
-    // Flip toggle to create blinking effect on subsequent calls
     toggle = !toggle;
-
-    // Update the ePaper display with the current frame buffer contents
     EPD_2IN9_V2_Display(frameBuffer);
 }
 
-/**
- * Updates the turn indicator by redrawing the turn marker at the specified location.
- * 
- * @param x The x-coordinate of the turn marker center.
- * @param y The y-coordinate of the turn marker center.
- */
-void DisplayManager::updateTurnIndicator(int x, int y) {
-    drawTurnMarker(x, y);
+void DisplayManager::updateTurnIndicator(uint8_t playerId, bool isTurn) {
+    if (playerId >= 4) return;
+    const auto& region = PLAYER_LAYOUT[playerId];
+    if (isTurn) toggle = true;
+    drawTurnMarker(region.turnX, region.turnY);
 }
 
-/**
- * Draws the life total or "ELIMINATED" text at the specified (x, y) coordinates.
- * Clears the area before drawing to avoid overlapping previous text.
- * 
- * @param x The x-coordinate where the life total or text should be drawn.
- * @param y The y-coordinate baseline for the text.
- * @param life The current life total; if zero or below, "ELIMINATED" is shown instead.
- */
-void DisplayManager::drawLife(int x, int y, int life) {
-    // Clear the area where life total or eliminated text will be drawn
-    Paint_ClearWindows(x, y - 24, x + 100, y + 6, WHITE);
+void DisplayManager::drawLife(uint8_t playerId, int life) {
+    if (playerId >= 4) return;
+    const auto& region = PLAYER_LAYOUT[playerId];
 
+    Paint_ClearWindows(region.lifeX, region.lifeY - 24, region.lifeX + 100, region.lifeY + 6, WHITE);
     if (life <= 0) {
-        // Draw "ELIMINATED" text if life is zero or below
-        Paint_DrawString_EN(x, y - 24, "ELIMINATED", &Font24, BLACK, WHITE);
+        Paint_DrawString_EN(region.lifeX, region.lifeY - 24, "ELIMINATED", &Font24, BLACK, WHITE);
     } else {
-        // Draw the numeric life total
         char buf[10];
-        sprintf(buf, "%d", life);
-        Paint_DrawString_EN(x, y - 24, buf, &Font24, BLACK, WHITE);
+        snprintf(buf, sizeof(buf), "%d", life);
+        Paint_DrawString_EN(region.lifeX, region.lifeY - 24, buf, &Font24, BLACK, WHITE);
     }
+    EPD_2IN9_V2_Display(frameBuffer);
+}
 
-    // Refresh the display to show updated life total or eliminated text
+void DisplayManager::drawPoison(uint8_t playerId, int poison) {
+    if (playerId >= 4) return;
+    const auto& region = PLAYER_LAYOUT[playerId];
+
+    Paint_ClearWindows(region.poisonX, region.poisonY - 12, region.poisonX + 30, region.poisonY + 8, WHITE);
+    char buf[10];
+    snprintf(buf, sizeof(buf), "%d", poison);
+    Paint_DrawString_EN(region.poisonX, region.poisonY - 12, buf, &Font12, BLACK, WHITE);
     EPD_2IN9_V2_Display(frameBuffer);
 }
 
 /**
- * Draws the poison counter at the specified (x, y) coordinates using Font12.
- * Clears the area before drawing to prevent overlap.
- * 
- * @param x The x-coordinate where the poison count should be drawn.
- * @param y The y-coordinate baseline for the poison count text.
- * @param poison The current poison counter value.
+ * Renders the full state for a single player (life, poison, turn).
  */
-void DisplayManager::drawPoison(int x, int y, int poison) {
-    // Clear the area where poison counter will be drawn
-    Paint_ClearWindows(x, y - 12, x + 30, y + 8, WHITE);
+void DisplayManager::renderPlayerState(uint8_t playerId, const PlayerState& state) {
+    if (playerId >= 4) return;
 
-    // Draw the numeric poison counter
-    char buf[10];
-    sprintf(buf, "%d", poison);
-    Paint_DrawString_EN(x, y - 12, buf, &Font12, BLACK, WHITE);
-
-    // Refresh the display to show updated poison counter
-    EPD_2IN9_V2_Display(frameBuffer);
+    drawLife(playerId, state.eliminated ? 0 : state.life);
+    drawPoison(playerId, state.poison);
+    updateTurnIndicator(playerId, state.isTurn);
 }

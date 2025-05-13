@@ -1,2 +1,5 @@
-.pio
-.vscode
+.pio/
+.vscode/
+# lib/
+sample/
+.DS_Store

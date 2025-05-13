@@ -1,0 +1,13 @@
+{
+  "name": "WaveshareEPaper",
+  "version": "1.0.0",
+  "description": "Custom Waveshare e-Paper driver for 2.9\" V2 display",
+  "authors": [
+    {
+      "name": "Waveshare",
+      "url": "https://github.com/waveshare/e-Paper"
+    }
+  ],
+  "frameworks": "arduino",
+  "platforms": "espressif32"
+}
