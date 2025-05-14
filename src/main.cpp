@@ -4,7 +4,7 @@
 #include "IInputManager.h"        // Interface for input management
 
 // Initialize using Hardware or Simulation, adjust flag in Config.h to swtich mode
-#ifdef SIMULATION_MODE
+#ifdef WOKWI
   #include "testing/SimulationInputManager.h"  // Simulation input for testing
   SimulationInputManager simInput;
   IInputManager* input = &simInput;            // Pointer to input manager interface
@@ -24,7 +24,7 @@ GameState gameState;           // Maintains current game state
 
 void setup() {
   Serial.begin(115200);
-
+  display.begin();  // Initialize e-paper display
   input->begin();              // Initialize input system
 
   if (!network.hasHost()) {
@@ -37,20 +37,39 @@ void setup() {
 
   delay(500);                  // Prepare game setup environment
 
-  gameState.begin(device.getPlayerId(), gameSetup.getStartingLife());
-  for (int id = 0; id < gameSetup.getPlayerCount(); ++id) {
-    display.renderPlayerState(id, gameState.getPlayerState(id));
+  if (device.isHost()) {
+    gameState.begin(device.getPlayerId(), gameSetup.getStartingLife());
+    for (int id = 0; id < gameSetup.getPlayerCount(); ++id) {
+      display.renderPlayerState(id, gameState.getPlayerState(id));
+      Serial.printf("[Render] Drawing player %d\n", id);
+    }
+  } else {
+    // Wait for host to send game parameters
+    while (!network.hasReceivedGameParams()) {
+      delay(100);
+    }
+    gameState.begin(device.getPlayerId(), gameSetup.getStartingLife());
+    for (int id = 0; id < gameSetup.getPlayerCount(); ++id) {
+      display.renderPlayerState(id, gameState.getPlayerState(id));
+      Serial.printf("[Render] Drawing player %d\n", id);
+    }
   }
-
-  delay(500);                  // Initialize game state tracking
 }
 
 void loop() {
+  static unsigned long lastHeartbeat = 0;
+    if (millis() - lastHeartbeat > 3000) {
+    Serial.println("[Loop] heartbeat...");
+    lastHeartbeat = millis();
+    }
+
   input->update();             // Poll and update input state
 
   if (input->getRotation() != 0) {
     Serial.print("Rotated: ");
     Serial.println(input->getRotation());    // Log rotation input
+    Serial.print("[Loop] getRotation: ");
+    Serial.println(input->getRotation());
   }
 
   if (input->wasButtonShortPressed()) {
@@ -62,6 +81,11 @@ void loop() {
     if (gameState.getPlayerState(device.getPlayerId()).isTurn) {
       network.sendTurnAdvanceRequest(device.getPlayerId());
     }
+  }
+
+  if (input->getRotation() != 0) {
+    Serial.printf("[Main] Life change detected: %d\n", input->getRotation());
+    Serial.printf("[Loop] getRotation: %d\n", input->getRotation());
   }
 
   delay(10);                   // Small delay to debounce inputs and reduce CPU usage

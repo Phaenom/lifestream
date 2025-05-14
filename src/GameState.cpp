@@ -39,6 +39,7 @@ void GameState::adjustLife(int delta) {
     checkElimination();
     display.renderPlayerState(localPlayerId, self);
     Serial.printf("[GameState] Life adjusted by %d. New life: %d\n", delta, self.life);
+    Serial.printf("[GameState] Adjusting life for player %d by %+d\n", currentTurnPlayer, delta);
 }
 
 void GameState::adjustPoison(int delta) {

@@ -38,6 +38,12 @@ public:
      */
     bool wasButtonLongPressed() const override;
 
+#ifdef WOKWI
+    void simulateRotation(int delta) override {
+        rotationDelta += delta;
+    }
+#endif
+
 private:
     mutable int rotationDelta = 0;             // Tracks the change in rotation since last update
     bool buttonHeld = false;           // Indicates if the button is currently held down

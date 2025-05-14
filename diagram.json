@@ -3,20 +3,54 @@
   "author": "Wade Casper",
   "editor": "wokwi",
   "parts": [
-    { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": 115.2, "left": -129.56, "attrs": {} },
-    { "type": "board-epaper-2in9", "id": "epd1", "top": -85.8, "left": 80.88, "attrs": {} }
+    {
+      "type": "board-esp32-devkit-c-v4",
+      "id": "esp",
+      "top": 65,
+      "left": 0,
+      "rotate": 90,
+      "attrs": {}
+    },
+
+    { "type": "board-epaper-2in9",
+      "id": "epd1",
+      "top": -100,
+      "left": -200,
+      "attrs": {} 
+    },
+
+    { "type": "wokwi-ky-040",
+      "id": "encoder1",
+      "top": 135,
+      "left": -275,
+      "attrs": {} },
+    
+    {
+      "type": "wokwi-led",
+      "id": "turnLed",
+      "top": 65,
+      "left": 175,
+      "attrs": { "color": "limegreen" }
+    }
   ],
   "connections": [
     [ "esp:TX", "$serialMonitor:RX", "", [] ],
     [ "esp:RX", "$serialMonitor:TX", "", [] ],
-    [ "epd1:VCC", "esp:3V3", "red", [ "h-297.6", "v134.33" ] ],
-    [ "epd1:GND", "esp:GND.1", "white", [ "h-288", "v249.53" ] ],
-    [ "epd1:DIN", "esp:14", "blue", [ "h-307.2", "v249.53" ] ],
-    [ "epd1:CLK", "esp:13", "green", [ "h-316.8", "v287.93" ] ],
-    [ "epd1:CS", "esp:15", "gold", [ "h-326.4", "v403.2", "h240", "v-96" ] ],
-    [ "epd1:DC", "esp:27", "orange", [ "h-336", "v268.8" ] ],
-    [ "epd1:RST", "esp:26", "red", [ "h-345.6", "v268.8" ] ],
-    [ "epd1:BUSY", "esp:25", "#8f4814", [ "h-355.2", "v268.8" ] ]
+    [ "epd1:BUSY", "esp:4", "cyan", [ "h-160.72", "v398.2", "h355.2" ] ],
+    [ "epd1:CS", "esp:5", "blue", [ "h-131.92", "v398.2", "h355.2" ] ],
+    [ "epd1:DC", "esp:17", "green", [ "h-141.52", "v398.2", "h355.2" ] ],
+    [ "epd1:RST", "esp:16", "yellow", [ "h-151.12", "v398.2", "h355.2" ] ],
+    [ "epd1:VCC", "esp:3V3", "red", [ "h-105.6", "v86.33", "h418.7" ] ],
+    [ "epd1:DIN", "esp:23", "green", [ "h-112.72", "v407.73", "h418.7" ] ],
+    [ "epd1:CLK", "esp:18", "purple", [ "h-122.32", "v398.13", "h355.2" ] ],
+    [ "encoder1:CLK", "esp:14", "green", [ "h38.4", "v-76.8", "h124.8" ] ],
+    [ "encoder1:DT", "esp:12", "blue", [ "h48", "v-76.7", "h86.4" ] ],
+    [ "encoder1:SW", "esp:13", "yellow", [ "h57.6", "v-76.7", "h105.6" ] ],
+    [ "encoder1:VCC", "esp:3V3", "red", [ "h67.2", "v-76.4", "h201.6" ] ],
+    [ "encoder1:GND", "esp:GND.1", "black", [ "v0.8", "h76.8", "v-76.8", "h67.2" ] ],
+    [ "turnLed:A", "esp:2", "green", [ "v144", "h-220.8" ] ],
+    [ "turnLed:C", "esp:GND.2", "black", [ "v134.4", "h-76.4" ] ],
+    [ "epd1:GND", "esp:GND.1", "black", [ "h-93.52", "v62.13", "h284.3" ] ]
   ],
   "dependencies": {}
 }

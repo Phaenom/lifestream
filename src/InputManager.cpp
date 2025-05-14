@@ -24,6 +24,7 @@ void IRAM_ATTR encoderISR() {
 }
 
 void InputManager::begin() {
+#ifndef WOKWI
     // Configure encoder pins as input with pull-up resistors
     pinMode(ENCODER_PIN_A, INPUT_PULLUP);
     pinMode(ENCODER_PIN_B, INPUT_PULLUP);
@@ -32,16 +33,20 @@ void InputManager::begin() {
 
     // Attach interrupt to encoder pin A to detect changes and call encoderISR
     attachInterrupt(digitalPinToInterrupt(ENCODER_PIN_A), encoderISR, CHANGE);
+#else
+    Serial.println("[InputManager] WOKWI mode: skipping hardware initialization.");
+#endif
 }
 
 void InputManager::update() {
-    // Disable interrupts to safely read and reset encoderPosition
+#ifndef WOKWI
     noInterrupts();
-    // Capture the current encoder rotation delta and reset it
     rotationDelta = encoderPosition;
     encoderPosition = 0;
-    // Re-enable interrupts
     interrupts();
+#else
+    // rotationDelta is manipulated via simulateRotation()
+#endif
 
     Serial.printf("[InputManager] Rotation delta: %d\n", rotationDelta);
 
