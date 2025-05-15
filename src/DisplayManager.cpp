@@ -6,8 +6,6 @@
 #include "DisplayManager.h"
 #include "Config.h"
 
-const int logoX = 110;
-const int logoY = 55;
 
 // Defines screen regions for each player's life, poison, and turn marker display.
 struct PlayerDisplayRegion {
@@ -16,11 +14,16 @@ struct PlayerDisplayRegion {
     int turnX, turnY;
 };
 
+// PLAYER_LAYOUT specifies display regions for each player.
+// Each entry: {lifeX, lifeY, poisonX, poisonY, turnX, turnY}
+//   - lifeX, lifeY: center of player's life total display
+//   - poisonX, poisonY: center of player's poison counter display
+//   - turnX, turnY: location for player's turn indicator (blinking circle)
 const PlayerDisplayRegion PLAYER_LAYOUT[4] = {
-    {40, 25, 40, 40, 5, 10},     // Player 1 (top left)
-    {150, 25, 150, 40, 245, 10}, // Player 2 (top right, adjusted from 180 to 150)
-    {40, 90, 40, 105, 5, 75},    // Player 3 (bottom left)
-    {150, 90, 150, 105, 245, 75} // Player 4 (bottom right, adjusted from 180 to 150)
+    {40, 30,  45, 49,   5, 10},     // Player 1: (LIFE X, LIFE Y, POISON X, POISON Y, TURN X, TURN Y)
+    {198, 30, 203, 49, 155, 10},    // Player 2: (LIFE X, LIFE Y, POISON X, POISON Y, TURN X, TURN Y)
+    {40, 90,  45, 109,  5, 75},     // Player 3: (LIFE X, LIFE Y, POISON X, POISON Y, TURN X, TURN Y)
+    {198, 90, 203, 109, 155, 75}    // Player 4: (LIFE X, LIFE Y, POISON X, POISON Y, TURN X, TURN Y)
 };
 
 DisplayManager::DisplayManager() {}
@@ -33,18 +36,35 @@ void DisplayManager::begin() {
     EPD_2IN9_V2_Clear();
 
     // Allocate display buffer and initialize drawing context
-    frameBuffer = (UBYTE*)malloc(EPD_2IN9_V2_WIDTH * EPD_2IN9_V2_HEIGHT / 8);
-    //Paint_SetRotate(ROTATE_0); // Try 0, 90, 180, 270 depending on orientation
-    Paint_NewImage(frameBuffer, EPD_2IN9_V2_WIDTH, EPD_2IN9_V2_HEIGHT, 0, WHITE);
+    frameBuffer = (UBYTE*)malloc((EPD_2IN9_V2_WIDTH * EPD_2IN9_V2_HEIGHT) / 8);
+    Paint_NewImage(frameBuffer, EPD_2IN9_V2_WIDTH, EPD_2IN9_V2_HEIGHT, ROTATE_270, WHITE);
     Paint_SelectImage(frameBuffer);
     Paint_Clear(WHITE);
 
-    // Draw persistent MTG logo
-    const int logoX = 110;
-    const int logoY = 55;
+    // Bounding boxes for player quadrants with 2-pixel margin for safe padding
+    Paint_DrawRectangle(2, 2, 146, 62, BLACK, DOT_PIXEL_1X1, DRAW_FILL_EMPTY);     // Player 1
+    Paint_DrawRectangle(150, 2, 294, 62, BLACK, DOT_PIXEL_1X1, DRAW_FILL_EMPTY);   // Player 2
+    Paint_DrawRectangle(2, 66, 146, 126, BLACK, DOT_PIXEL_1X1, DRAW_FILL_EMPTY);   // Player 3
+    Paint_DrawRectangle(150, 66, 294, 126, BLACK, DOT_PIXEL_1X1, DRAW_FILL_EMPTY); // Player 4
+
+    // Fix for ROTATE_270 coordinate system
+    const int logoX = (EPD_2IN9_V2_HEIGHT - MTG_LOGO_SYMBOL_WIDTH) / 2;
+    const int logoY = (EPD_2IN9_V2_WIDTH - MTG_LOGO_SYMBOL_HEIGHT) / 2;
     Paint_SetRotate(ROTATE_270);
     Paint_ClearWindows(logoX, logoY, logoX + MTG_LOGO_SYMBOL_WIDTH, logoY + MTG_LOGO_SYMBOL_HEIGHT, WHITE);
+    // Draw centered title above the logo
+    const char* title = "LIFESTREAM";
+    int titleWidth = strlen(title) * Font16.Width;
+    int titleX = (EPD_2IN9_V2_HEIGHT - titleWidth) / 2;
+    int titleY = 0; // Align with top of screen
+    Paint_DrawString_EN(titleX, titleY, title, &Font16, BLACK, WHITE);
     drawLogo(logoX, logoY);
+
+    // DEBUG: Draw corner text markers to validate screen alignment
+    Paint_DrawString_EN(0, 0, "P1", &Font12, BLACK, WHITE);             // Top-left
+    Paint_DrawString_EN(280, 0, "P2", &Font12, BLACK, WHITE);           // Top-right
+    Paint_DrawString_EN(0, 115, "P3", &Font12, BLACK, WHITE);           // Bottom-left
+    Paint_DrawString_EN(280, 115, "P4", &Font12, BLACK, WHITE);         // Bottom-right
 
     EPD_2IN9_V2_Display(frameBuffer);
     Serial.println("[Display] Display initialized and cleared");
@@ -95,20 +115,20 @@ void DisplayManager::drawLife(uint8_t playerId, int life) {
     if (playerId >= 4) return;
     const auto& region = PLAYER_LAYOUT[playerId];
     const char* str;
-    char buf[10];
+    char buf[16];
     if (life <= 0) {
         str = "ELIMINATED";
     } else {
         snprintf(buf, sizeof(buf), "%d", life);
+        strcat(buf, " [+]");
         str = buf;
     }
     int textWidth = strlen(str) * Font12.Width;
     int x = region.lifeX - textWidth / 2;
-    x = std::max(0, std::min(x, EPD_2IN9_V2_WIDTH - textWidth));
-    int y = std::max(0, std::min(region.lifeY - 12, 128 - 16));
-    int x2 = std::min(x + 100, EPD_2IN9_V2_WIDTH);
+    x = std::max(0, std::min(x, EPD_2IN9_V2_HEIGHT - textWidth));
+    int y = std::max(0, std::min(region.lifeY - 8, 128 - 16));
+    int x2 = std::min(x + 100, EPD_2IN9_V2_HEIGHT);
     int y2 = std::min(y + 20, EPD_2IN9_V2_HEIGHT);
-    Paint_SetRotate(ROTATE_270); // Try 0, 90, 180, 270 depending on orientation
     Paint_ClearWindows(x, y, x2, y2, WHITE);
     Paint_DrawString_EN(x, y, str, &Font12, WHITE, BLACK);
     Serial.printf("[Display] Drawing life for P%d: %s\n", playerId + 1, str);
@@ -123,15 +143,14 @@ void DisplayManager::drawPoison(uint8_t playerId, int poison) {
 
     if (playerId >= 4) return;
     const auto& region = PLAYER_LAYOUT[playerId];
-    char buf[10];
-    snprintf(buf, sizeof(buf), "%d", poison);
+    char buf[16];
+    snprintf(buf, sizeof(buf), "%d [!]", poison);
     int textWidth = strlen(buf) * Font12.Width;
     int x = region.poisonX - textWidth / 2;
-    x = std::max(0, std::min(x, EPD_2IN9_V2_WIDTH - textWidth));
-    int y = std::max(0, std::min(region.poisonY - 12, 128 - 16));
-    int x2 = std::min(x + 30, EPD_2IN9_V2_WIDTH);
+    x = std::max(0, std::min(x, EPD_2IN9_V2_HEIGHT - textWidth));
+    int y = std::max(0, std::min(region.poisonY - 8, 128 - 16));
+    int x2 = std::min(x + 30, EPD_2IN9_V2_HEIGHT);
     int y2 = std::min(y + 20, EPD_2IN9_V2_HEIGHT);
-    Paint_SetRotate(ROTATE_270); // Try 0, 90, 180, 270 depending on orientation
     Paint_ClearWindows(x, y, x2, y2, WHITE);
     Paint_DrawString_EN(x, y, buf, &Font12, WHITE, BLACK);
     Serial.printf("[Display] Drawing poison for P%d: %s\n", playerId + 1, buf);
