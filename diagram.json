@@ -5,52 +5,40 @@
   "parts": [
     {
       "type": "board-esp32-devkit-c-v4",
-      "id": "esp",
+      "id": "ESP",
       "top": 65,
       "left": 0,
       "rotate": 90,
       "attrs": {}
     },
-
-    { "type": "board-epaper-2in9",
-      "id": "epd1",
-      "top": -100,
-      "left": -200,
-      "attrs": {} 
-    },
-
-    { "type": "wokwi-ky-040",
-      "id": "encoder1",
-      "top": 135,
-      "left": -275,
-      "attrs": {} },
-    
+    { "type": "board-epaper-2in9", "id": "EPD", "top": 221.4, "left": 205.68, "attrs": {} },
+    { "type": "wokwi-ky-040", "id": "ENCODER", "top": 40.1, "left": -183.2, "attrs": {} },
     {
       "type": "wokwi-led",
-      "id": "turnLed",
-      "top": 65,
-      "left": 175,
+      "id": "LED",
+      "top": 198,
+      "left": 157.4,
       "attrs": { "color": "limegreen" }
     }
   ],
   "connections": [
-    [ "esp:TX", "$serialMonitor:RX", "", [] ],
-    [ "esp:RX", "$serialMonitor:TX", "", [] ],
-    [ "epd1:BUSY", "esp:4", "cyan", [ "h-160.72", "v398.2", "h355.2" ] ],
-    [ "epd1:CS", "esp:5", "blue", [ "h-131.92", "v398.2", "h355.2" ] ],
-    [ "epd1:DC", "esp:17", "green", [ "h-141.52", "v398.2", "h355.2" ] ],
-    [ "epd1:RST", "esp:16", "yellow", [ "h-151.12", "v398.2", "h355.2" ] ],
-    [ "epd1:VCC", "esp:3V3", "red", [ "h-105.6", "v86.33", "h418.7" ] ],
-    [ "epd1:DIN", "esp:23", "green", [ "h-112.72", "v407.73", "h418.7" ] ],
-    [ "epd1:CLK", "esp:18", "purple", [ "h-122.32", "v398.13", "h355.2" ] ],
-    [ "encoder1:CLK", "esp:14", "green", [ "h38.4", "v-76.8", "h124.8" ] ],
-    [ "encoder1:DT", "esp:12", "blue", [ "h48", "v-76.7", "h86.4" ] ],
-    [ "encoder1:SW", "esp:13", "yellow", [ "h57.6", "v-76.7", "h105.6" ] ],
-    [ "encoder1:VCC", "esp:3V3", "red", [ "h67.2", "v-76.4", "h201.6" ] ],
-    [ "encoder1:GND", "esp:GND.1", "black", [ "v0.8", "h76.8", "v-76.8", "h67.2" ] ],
-    [ "turnLed:A", "esp:2", "green", [ "v144", "h-220.8" ] ],
-    [ "turnLed:C", "esp:GND.2", "black", [ "v134.4", "h-76.4" ] ],
-    [ "epd1:GND", "esp:GND.1", "black", [ "h-93.52", "v62.13", "h284.3" ] ]
+    [ "ESP:TX", "$serialMonitor:RX", "", [] ],
+    [ "ESP:RX", "$serialMonitor:TX", "", [] ],
+    [ "EPD:BUSY", "ESP:4", "cyan", [] ],
+    [ "EPD:CS", "ESP:5", "blue", [] ],
+    [ "EPD:RST", "ESP:16", "yellow", [] ],
+    [ "EPD:DC", "ESP:17", "green", [] ],
+    [ "EPD:CLK", "ESP:18", "purple", [] ],
+    [ "EPD:DIN", "ESP:23", "green", [] ],
+    [ "EPD:GND", "ESP:GND.1", "black", [ "h-288", "v-220.87", "h73.1" ] ],
+    [ "EPD:VCC", "ESP:3V3", "red", [ "h-19.2", "v-250.36" ] ],
+    [ "ENCODER:CLK", "ESP:14", "green", [] ],
+    [ "ENCODER:DT", "ESP:12", "blue", [] ],
+    [ "ENCODER:SW", "ESP:13", "yellow", [] ],
+    [ "ENCODER:VCC", "ESP:3V3", "red", [] ],
+    [ "ENCODER:GND", "ESP:GND.1", "black", [] ],
+    [ "LED:C", "ESP:GND.2", "black", [] ],
+    [ "LED:A", "ESP:22", "cyan", [ "v9.6", "h-99.7" ] ]
   ],
   "dependencies": {}
 }

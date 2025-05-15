@@ -55,16 +55,14 @@
 // #define EPD_BUSY_PIN    7
 // #define EPD_PWR_PIN     6
 
-
 // modified for Wokwi board
+#define EPD_BUSY_PIN    4
+#define EPD_CS_PIN      5
+#define EPD_PWR_PIN     6
+#define EPD_RST_PIN     16
+#define EPD_DC_PIN      17
 #define EPD_SCK_PIN     18
 #define EPD_MOSI_PIN    23
-#define EPD_CS_PIN       5
-#define EPD_DC_PIN      17
-#define EPD_RST_PIN     16
-#define EPD_BUSY_PIN     4
-#define EPD_PWR_PIN     6
-
 
 #define GPIO_PIN_SET   1
 #define GPIO_PIN_RESET 0
