@@ -15,7 +15,7 @@ Built on the ESP32 platform using a Waveshare 2.9" V2 ePaper display, rotary enc
 - Seamless wireless synchronization between devices
 - Designed for battery-powered operation
 - Modular, scalable architecture for future expansions
-- Player-friendly, MTG-themed user experience
+- Player-friendly, MTG-themed user experience with simulation support
 
 ---
 
@@ -34,22 +34,28 @@ ESP32 LifeStream Devices x4
       Clients auto join
 ```
 
+> Note: In simulation mode, the system runs without ESP-NOW networking and uses serial commands to simulate input and turn flow.
+
 ---
 
 ## Features Overview
 
 | Feature                                      | Status  |
 |---------------------------------------------|---------|
-| Player Life Tracking (4 Players)            | ✓       |
-| MTG Themed: Planeswalker Labels             | ✓       |
-| Turn Indicator                              | ✓       |
-| Dynamic Redraw Optimization                 | ✓       |
-| Rotary Encoder Life Adjustment              | ✗       |
-| Button Press to Cycle Turn                  | ✗       |
-| ESP-NOW Host/Client Auto Detection          | ✗       |
-| Multiplayer Life Sync over Wi-Fi            | ✗       |
-| Battery Level Monitoring                    | ✗       |
-| OTA Updates Support                        | ✗       |
+| Player Life Tracking (4 Players)            | ✅       |
+| MTG Themed: Planeswalker Labels             | ✅       |
+| Turn Indicator with Blinking Marker         | ✅       |
+| Dynamic Redraw Optimization                 | ✅       |
+| Serial Simulation Mode                      | ✅       |
+| Full Game Reset & Redraw                    | ✅       |
+| Simulation Input: Life/Poison/Turn          | ✅       |
+| Display Clamping / Bounds Safety            | ✅       |
+| Rotary Encoder Life Adjustment              | 🚧       |
+| Button Press to Cycle Turn                  | 🚧       |
+| ESP-NOW Host/Client Auto Detection          | 🚧       |
+| Multiplayer Life Sync over Wi-Fi            | 🚧       |
+| Battery Level Monitoring                    | ❌       |
+| OTA Updates Support                         | ❌       |
 
 ---
 
@@ -132,12 +138,12 @@ BOOT
 │     ├── Send Join Request to Host
 │     └── Wait for Player ID Assignment
 │
-└── GAME_LOOP (All Devices)
-      ├── Handle Inputs (Encoder / Button)
+└── GAME_LOOP (All Devices or Sim Mode)
+      ├── Handle Inputs (Encoder / Button or Serial)
       ├── Send Updates (Life/Turn Changes)
-      ├── Receive Network Updates
+      ├── Receive Network Updates (ESP-NOW only)
       ├── Update Display Dynamically
-      └── Sleep on Inactivity
+      └── Sleep on Inactivity (optional)
 ```
 
 ---
@@ -177,7 +183,7 @@ BOOT
 git clone https://github.com/yourusername/LifeStream.git
 ```
 
-2. Open in PlatformIO or Arduino IDE.
+2. Open in PlatformIO (recommended) or Arduino IDE.
 
 3. Install Required Libraries:
 - GxEPD2
@@ -188,12 +194,17 @@ git clone https://github.com/yourusername/LifeStream.git
 
 5. Power on multiple devices to test Host/Client behavior.
 
+- Alternatively, run in `sim` mode using:
+  ```bash
+  pio run -e sim -t upload
+  ```
+
 ---
 
 ## Future Enhancements (Planned)
 
-- Rotary Encoder Life Adjustment
-- Button-driven Turn Cycling
+- Rotary Encoder Life Adjustment (in progress)
+- Button-driven Turn Cycling (in progress)
 - ESP-NOW Multiplayer Communication
 - OTA Update Support
 - Battery Level Indicator
@@ -204,10 +215,10 @@ git clone https://github.com/yourusername/LifeStream.git
 
 ## License
 
-TBD
+MIT License
 
 ---
 
 ## Credits
 
-Inspired by the Magic: The Gathering community for fostering innovation in physical game accessories.
+Inspired by the Magic: The Gathering community and makers passionate about elevating analog play with digital tools.
