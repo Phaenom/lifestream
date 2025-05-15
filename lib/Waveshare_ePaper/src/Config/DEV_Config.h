@@ -46,23 +46,23 @@
  * GPIO config
 **/
 
-// DEFAULT CONFIGURATION
-// #define EPD_SCK_PIN     13
-// #define EPD_MOSI_PIN    11
-// #define EPD_CS_PIN      10
-// #define EPD_DC_PIN      9
-// #define EPD_RST_PIN     8
-// #define EPD_BUSY_PIN    7
-// #define EPD_PWR_PIN     6
+// Waveshare e-Paper ESP32 Driver Board
+#define EPD_PWR_PIN     1
+#define EPD_SCK_PIN     13
+#define EPD_MOSI_PIN    14
+#define EPD_CS_PIN      15
+#define EPD_BUSY_PIN    25
+#define EPD_RST_PIN     26
+#define EPD_DC_PIN      27
 
 // modified for Wokwi board
-#define EPD_BUSY_PIN    4
-#define EPD_CS_PIN      5
-#define EPD_PWR_PIN     6
-#define EPD_RST_PIN     16
-#define EPD_DC_PIN      17
-#define EPD_SCK_PIN     18
-#define EPD_MOSI_PIN    23
+// #define EPD_BUSY_PIN    4
+// #define EPD_CS_PIN      5
+// #define EPD_PWR_PIN     6
+// #define EPD_RST_PIN     16
+// #define EPD_DC_PIN      17
+// #define EPD_SCK_PIN     18
+// #define EPD_MOSI_PIN    23
 
 #define GPIO_PIN_SET   1
 #define GPIO_PIN_RESET 0
