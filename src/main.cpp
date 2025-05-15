@@ -1,10 +1,20 @@
-// Main entry point for LifeStream, responsible for initializing system modules and running the main loop.
-#include "config.h"
-#include "IInputManager.h"        // Interface for input management
-#include "InputManager.h"
+#ifdef SIMULATION_MODE
+#warning SIMULATION_MODE is enabled
+#endif
 
+// Main entry point for LifeStream, responsible for initializing system modules and running the main loop.
+#include "Config.h"
+#include "IInputManager.h"        // Interface for input management
+
+#ifdef SIMULATION_MODE
+#include "testing/SimulationInputManager.h"
+SimulationInputManager simInput;
+IInputManager* input = &simInput;
+#else
+#include "InputManager.h"
 InputManager hwInput;
 IInputManager* input = &hwInput;
+#endif
 
 DisplayManager display;        // Manages display output
 BatteryManager battery;        // Handles battery monitoring
@@ -57,11 +67,12 @@ void setup() {
 }
 
 void loop() {
-  static unsigned long lastHeartbeat = 0;
-    if (millis() - lastHeartbeat > 3000) {
-    Serial.printf("[Loop] Heartbeat - Player ID: %d, Is Host: %d\n", device.getPlayerId(), device.isHost());
-    lastHeartbeat = millis();
-    }
+  // Heartbeat - Used for debugging to ensure loop is active
+  // static unsigned long lastHeartbeat = 0;
+  //   if (millis() - lastHeartbeat > 3000) {
+  //   Serial.printf("[Loop] Heartbeat - Player ID: %d, Is Host: %d\n", device.getPlayerId(), device.isHost());
+  //   lastHeartbeat = millis();
+  //   }
 
   input->update();             // Poll and update input state
 

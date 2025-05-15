@@ -159,3 +159,9 @@ void DisplayManager::renderPlayerState(uint8_t playerId, const PlayerState& stat
         updateTurnIndicator(playerId, state.isTurn);
     }
 }
+
+void DisplayManager::renderAllPlayerStates(const GameState& state) {
+    for (int i = 0; i < 4; ++i) {
+        renderPlayerState(i, state.getPlayerState(i));
+    }
+}

@@ -1,53 +1,100 @@
 #include "GameState.h"
 #include "testing/SimulationInputManager.h"
 
+// Initializes the simulation input manager.
+// Outputs a startup message to Serial for confirmation.
 void SimulationInputManager::begin() {
     Serial.println("\n[SimInput] Simulation input initialized.");
     Serial.printf("[InputManager] Update cycle at %lu ms\n", millis());
 }
 
+// Checks for incoming serial input and maps characters to simulated input behavior.
+// Allows for life/poison adjustment, turn advancement, reset, and redraws for simulation testing.
 void SimulationInputManager::update() {
-    if (Serial.available()) {
-        char input = Serial.read();
-        Serial.printf("[SimInput] Received char: 0x%02X (%c)\n", input, input);
-        input = tolower(input);
-        unsigned long now = millis();
+    static int selectedPlayer = 0;
+    if (!Serial.available()) return;
 
-        if (input == 'a') {
+    char input = tolower(Serial.read());
+    Serial.printf("[SimInput] Received char: 0x%02X (%c)\n", input, input);
+
+    unsigned long now = millis();
+    extern GameState gameState;
+    extern DisplayManager display;
+
+    switch (input) {
+        case '1': case '2': case '3': case '4':
+            // Select target player by number
+            selectedPlayer = input - '1';
+            Serial.printf("[SimInput] Targeting player %d\n", selectedPlayer);
+            break;
+
+        case 'w':
+            // Increase poison counter
+            gameState.adjustPoison(selectedPlayer, 1);
+            break;
+
+        case 's':
+            // Decrease poison counter
+            gameState.adjustPoison(selectedPlayer, -1);
+            break;
+
+        case 'a':
+            // Simulate left (negative) rotation
             simulateRotation(-1);
-        } else if (input == 'd') {
+            break;
+
+        case 'd':
+            // Simulate right (positive) rotation
             simulateRotation(1);
-        }
-#ifdef WOKWI
-        else if (input == 'b') {
-            simulateButtonPress(true);  // Simulate press
-        } else if (input == 'r') {
-            simulateButtonPress(false); // Simulate release
-        }
-#else
-        else if (input == 'b') {
+            break;
+
+        case 't':
+            // Advance turn to next player
+            gameState.nextTurn();
+            break;
+
+        case 'x':
+            // Eliminate selected player (life -> 0)
+            gameState.adjustLife(selectedPlayer, -99);
+            break;
+
+        case 'v':
+            // Eliminate all other players (simulate win)
+            for (int i = 0; i < 4; ++i)
+                if (i != selectedPlayer) gameState.adjustLife(i, -99);
+            break;
+
+        case 'r':
+            // Reset all player states and refresh display
+            gameState.resetAll();
+            display.renderAllPlayerStates(gameState);
+            Serial.println("[SimInput] All player states and turn reset.");
+            break;
+
+        case 'g':
+            // Redraw current game state for all players
+            display.renderAllPlayerStates(gameState);
+            Serial.println("[SimInput] Redrawing all player states.");
+            break;
+
+        case 'b':
+            // Simulate button hold
             buttonPressTime = now;
             buttonHeld = true;
-        } else if (input == 'r') {
-            if (buttonHeld) {
-                unsigned long duration = now - buttonPressTime;
-                if (duration >= 1000) longPressDetected = true;
-                else shortPressDetected = true;
-                buttonHeld = false;
-            }
-        }
-#endif
+            break;
+
+        default:
+            break;
     }
 
-    // After processing input, if rotationDelta is nonzero, adjust game state
-    extern GameState gameState;
     if (rotationDelta != 0) {
-        Serial.printf("[SimInput] Adjusting life by %d\n", rotationDelta);
-        gameState.adjustLife(rotationDelta);
-        rotationDelta = 0;  // reset manually since getRotation() isn't called here
+        Serial.printf("[SimInput] Adjusting life of P%d by %d\n", selectedPlayer, rotationDelta);
+        gameState.adjustLife(selectedPlayer, rotationDelta);
+        rotationDelta = 0;
     }
 }
 
+// Returns the simulated rotation value and clears it.
 int SimulationInputManager::getRotation() const {
     int delta = rotationDelta;
     // Serial.printf("[SimInput] getRotation: returning %d\n", delta);
@@ -55,23 +102,27 @@ int SimulationInputManager::getRotation() const {
     return delta;
 }
 
+// Returns and clears the simulated short/long press state.
 bool SimulationInputManager::wasButtonShortPressed() const {
     bool result = shortPressDetected;
     shortPressDetected = false;
     return result;
 }
 
+// Returns and clears the simulated short/long press state.
 bool SimulationInputManager::wasButtonLongPressed() const {
     bool result = longPressDetected;
     longPressDetected = false;
     return result;
 }
 
+// Increments the internal rotation delta and logs the change.
 void SimulationInputManager::simulateRotation(int delta) {
     rotationDelta += delta;
     Serial.printf("[SimInput] simulateRotation called: delta=%d, new value=%d\n", delta, rotationDelta);
 }
 
+// Simulates a button press/release and sets short/long press flags based on press duration.
 void SimulationInputManager::simulateButtonPress(bool held) {
     unsigned long now = millis();
 

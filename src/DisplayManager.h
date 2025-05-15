@@ -21,6 +21,7 @@ public:
 
     void begin();                                      // Initialize display system
     void renderPlayerState(uint8_t playerId, const PlayerState& state); // Draw full info for one player
+    void renderAllPlayerStates(const class GameState& state);  // Render all players' states
 
 private:
     void drawLife(uint8_t playerId, int life);         // Render life total or "ELIMINATED"

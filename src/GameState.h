@@ -6,12 +6,13 @@
 
 class GameState {
 public:
-    void begin(int localPlayerId, int startingLife);     // Init with player ID and life
-    void reset();                                        // Reset local player only
-    void adjustLife(int delta);                          // Local life
-    void adjustPoison(int delta);                        // Local poison
-    void setTurn(bool active);                           // Local turn state
-    const PlayerState& getPlayerState(uint8_t id) const; // Get state of any player
+    void begin(int localPlayerId, int startingLife);        // Init with player ID and life
+    void reset();                                           // Reset local player only
+    void resetAll();                                        // Resets all player states (for simulation mode)
+    void adjustLife(uint8_t playerId, int delta);           // Adjust life for any player
+    void adjustPoison(uint8_t playerId, int delta);         // Adjust poison for any player
+    void setTurn(bool active);                              // Local turn state
+    const PlayerState& getPlayerState(uint8_t id) const;    // Get state of any player
     void nextTurn();
 
     int getCurrentTurnPlayer() const;

@@ -53,6 +53,67 @@ ESP32 LifeStream Devices x4
 
 ---
 
+## Simulation Mode
+
+LifeStream supports a serial-based simulation mode for development without hardware.
+
+### How to Enable
+
+1. Build using the `sim` environment in `platformio.ini`:
+   ```bash
+   pio run -e sim -t upload
+   ```
+
+2. Connect to Serial Monitor (115200 baud) and use the following key commands:
+
+### Serial Commands
+
+| Key | Action                                 |
+|-----|----------------------------------------|
+| `1`–`4` | Select active player                |
+| `a`   | Decrease selected player's life       |
+| `d`   | Increase selected player's life       |
+| `w`   | Increase poison counter               |
+| `s`   | Decrease poison counter               |
+| `t`   | Advance to the next player's turn     |
+| `x`   | Eliminate selected player             |
+| `v`   | Eliminate all others (simulate win)   |
+| `r`   | Reset all players                     |
+| `g`   | Redraw current game state             |
+
+Simulation mode helps test game logic, UI redraws, and turn flow without requiring physical input devices.
+
+### Example Simulation Log
+
+```plaintext
+[Main] No host detected, assuming host role
+[DeviceManager] Host role assumed. Player ID set to 0.
+[GameSetup] Default setup — Players: 4, Starting Life: 20
+[Display] Rendering state for P1 — Life: 20, Poison: 0, Turn: 0
+[SimInput] Received char: 0x74 (t)
+[GameState] Turn passed from Player 0 to Player 1
+[SimInput] Received char: 0x61 (a)
+[GameState] Adjusting life for player 1 by -1. New life: 19
+```
+
+### Simulation Mode UI Layout
+
+Example 4-player display layout:
+
+```
+┌────────────────────────────────────────────┐
+│ P1: 20   PSN: 0     |     P2: 20   PSN: 0  │
+│                                ●           │
+│                                            │
+│ P3: 20   PSN: 0     |     P4: 20   PSN: 0  │
+│                                ○           │
+└────────────────────────────────────────────┘
+```
+
+Legend:
+- `●` = Active player's turn (black dot)
+- `○` = Inactive turn marker
+
 ## System States & Flow
 
 ```plaintext
