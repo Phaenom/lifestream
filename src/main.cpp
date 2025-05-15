@@ -22,7 +22,7 @@ DeviceManager device;          // Manages device-specific functions
 EEPROMManager eeprom;          // Manages EEPROM storage
 NetworkManager network;        // Handles network connectivity
 GameSetup gameSetup;           // Manages game setup procedures
-GameState gameState;           // Maintains current game state
+GameState gameState;           // Maintains current gameState state
 
 void setup() {
   Serial.println("[Main] Setup starting...");
@@ -68,11 +68,11 @@ void setup() {
 
 void loop() {
   // Heartbeat - Used for debugging to ensure loop is active
-  // static unsigned long lastHeartbeat = 0;
-  //   if (millis() - lastHeartbeat > 3000) {
-  //   Serial.printf("[Loop] Heartbeat - Player ID: %d, Is Host: %d\n", device.getPlayerId(), device.isHost());
-  //   lastHeartbeat = millis();
-  //   }
+  static unsigned long lastHeartbeat = 0;
+    if (millis() - lastHeartbeat > 3000) {
+    Serial.printf("[Loop] Heartbeat - Player ID: %d, Is Host: %d\n", device.getPlayerId(), device.isHost());
+    lastHeartbeat = millis();
+    }
 
   input->update();             // Poll and update input state
 

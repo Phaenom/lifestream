@@ -24,15 +24,21 @@ DisplayManager::DisplayManager() {}
 
 // Initializes the e-paper display, clears the screen, and prepares a drawing buffer.
 void DisplayManager::begin() {
+    // Initialize hardware interfaces
+    DEV_Module_Init();
+
     EPD_2IN9_V2_Init();
     EPD_2IN9_V2_Clear();
 
     // Allocate display buffer and initialize drawing context
     frameBuffer = (UBYTE*)malloc(EPD_2IN9_V2_WIDTH * EPD_2IN9_V2_HEIGHT / 8);
+    //Paint_SetRotate(ROTATE_0); // Try 0, 90, 180, 270 depending on orientation
     Paint_NewImage(frameBuffer, EPD_2IN9_V2_WIDTH, EPD_2IN9_V2_HEIGHT, 0, WHITE);
     Paint_SelectImage(frameBuffer);
     Paint_Clear(WHITE);
     Serial.println("[Display] Display initialized and cleared");
+
+    DEV_Delay_ms(500);
 }
 
 /**
@@ -91,8 +97,9 @@ void DisplayManager::drawLife(uint8_t playerId, int life) {
     int y = std::max(0, std::min(region.lifeY - 12, 128 - 16));
     int x2 = std::min(x + 100, EPD_2IN9_V2_WIDTH);
     int y2 = std::min(y + 20, EPD_2IN9_V2_HEIGHT);
+    Paint_SetRotate(ROTATE_270); // Try 0, 90, 180, 270 depending on orientation
     Paint_ClearWindows(x, y, x2, y2, WHITE);
-    Paint_DrawString_EN(x, y, str, &Font12, BLACK, WHITE);
+    Paint_DrawString_EN(x, y, str, &Font12, WHITE, BLACK);
     Serial.printf("[Display] Drawing life for P%d: %s\n", playerId + 1, str);
     EPD_2IN9_V2_Display(frameBuffer);
 }
@@ -113,8 +120,9 @@ void DisplayManager::drawPoison(uint8_t playerId, int poison) {
     int y = std::max(0, std::min(region.poisonY - 12, 128 - 16));
     int x2 = std::min(x + 30, EPD_2IN9_V2_WIDTH);
     int y2 = std::min(y + 20, EPD_2IN9_V2_HEIGHT);
+    Paint_SetRotate(ROTATE_270); // Try 0, 90, 180, 270 depending on orientation
     Paint_ClearWindows(x, y, x2, y2, WHITE);
-    Paint_DrawString_EN(x, y, buf, &Font12, BLACK, WHITE);
+    Paint_DrawString_EN(x, y, buf, &Font12, WHITE, BLACK);
     Serial.printf("[Display] Drawing poison for P%d: %s\n", playerId + 1, buf);
     EPD_2IN9_V2_Display(frameBuffer);
 }

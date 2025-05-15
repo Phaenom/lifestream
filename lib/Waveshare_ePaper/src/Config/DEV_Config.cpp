@@ -34,11 +34,13 @@ void GPIO_Config(void)
     pinMode(EPD_BUSY_PIN,  INPUT);
     pinMode(EPD_RST_PIN , OUTPUT);
     pinMode(EPD_DC_PIN  , OUTPUT);
-    pinMode(EPD_PWR_PIN  , OUTPUT);
+    
+    pinMode(EPD_SCK_PIN, OUTPUT);
+    pinMode(EPD_MOSI_PIN, OUTPUT);
     pinMode(EPD_CS_PIN , OUTPUT);
 
-    digitalWrite(EPD_PWR_PIN , HIGH);
     digitalWrite(EPD_CS_PIN , HIGH);
+    digitalWrite(EPD_SCK_PIN, LOW);
 }
 
 void GPIO_Mode(UWORD GPIO_Pin, UWORD Mode)
@@ -63,26 +65,13 @@ UBYTE DEV_Module_Init(void)
 	Serial.begin(115200);
 
 	// spi
-	SPI.begin();
-    SPI.beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE0));
+	// SPI.setDataMode(SPI_MODE0);
+	// SPI.setBitOrder(MSBFIRST);
+	// SPI.setClockDivider(SPI_CLOCK_DIV4);
+	// SPI.begin();
 
 	return 0;
 }
-
-
-void DEV_GPIO_Init(void)
-{
-    SPI.end(); 
-    pinMode(EPD_SCK_PIN, OUTPUT);
-    pinMode(EPD_MOSI_PIN, OUTPUT);
-}
-
-void DEV_SPI_Init(void)
-{
-    SPI.begin();
-    SPI.beginTransaction(SPISettings(4000000, MSBFIRST, SPI_MODE0));
-}
-
 
 /******************************************************************************
 function:
@@ -90,19 +79,9 @@ function:
 ******************************************************************************/
 void DEV_SPI_WriteByte(UBYTE data)
 {
-    SPI.transfer(data);
-}
-
-void DEV_SPI_Write_nByte(UBYTE *pData, UDOUBLE len)
-{
-    for (int i = 0; i < len; i++)
-        DEV_SPI_WriteByte(pData[i]);
-}
-
-void DEV_SPI_SendByte(UBYTE data)
-{
-    GPIO_Mode(EPD_MOSI_PIN, OUTPUT);
+    //SPI.beginTransaction(spi_settings);
     digitalWrite(EPD_CS_PIN, GPIO_PIN_RESET);
+
     for (int i = 0; i < 8; i++)
     {
         if ((data & 0x80) == 0) digitalWrite(EPD_MOSI_PIN, GPIO_PIN_RESET); 
@@ -112,13 +91,16 @@ void DEV_SPI_SendByte(UBYTE data)
         digitalWrite(EPD_SCK_PIN, GPIO_PIN_SET);     
         digitalWrite(EPD_SCK_PIN, GPIO_PIN_RESET);
     }
+
+    //SPI.transfer(data);
     digitalWrite(EPD_CS_PIN, GPIO_PIN_SET);
+    //SPI.endTransaction();	
 }
 
 UBYTE DEV_SPI_ReadByte()
 {
     UBYTE j=0xff;
-    GPIO_Mode(EPD_MOSI_PIN, INPUT);
+    GPIO_Mode(EPD_MOSI_PIN, 0);
     digitalWrite(EPD_CS_PIN, GPIO_PIN_RESET);
     for (int i = 0; i < 8; i++)
     {
@@ -134,11 +116,8 @@ UBYTE DEV_SPI_ReadByte()
     return j;
 }
 
-
-
-
-void DEV_Module_Exit(void)
+void DEV_SPI_Write_nByte(UBYTE *pData, UDOUBLE len)
 {
-    digitalWrite(EPD_PWR_PIN , LOW);
+    for (int i = 0; i < len; i++)
+        DEV_SPI_WriteByte(pData[i]);
 }
-

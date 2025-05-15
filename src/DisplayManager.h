@@ -31,6 +31,11 @@ private:
 
     bool toggle = false;                               // Blink state toggle
     UBYTE* frameBuffer = nullptr;                      // Display buffer
+
+    UBYTE *BlackImage; // Buffer for display image
+
+    // Draws the MTG logo at specified (x, y) coordinates
+    void drawLogo(int x, int y);
 };
 
 #endif // DISPLAY_MANAGER_H
