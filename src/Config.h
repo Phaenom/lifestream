@@ -10,6 +10,6 @@
 #include "NetworkManager.h"
 #include "Utils.h"
 
-#define SIMULATION_MODE
+// #define SIMULATION_MODE  // Uncomment to enable serial-based simulation mode
 
 #endif

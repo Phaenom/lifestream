@@ -1,18 +1,10 @@
 // Main entry point for LifeStream, responsible for initializing system modules and running the main loop.
-
-#include "Config.h"               // Configuration settings and mode flags
+#include "config.h"
 #include "IInputManager.h"        // Interface for input management
+#include "InputManager.h"
 
-// Initialize using Hardware or Simulation, adjust flag in Config.h to swtich mode
-#ifdef WOKWI
-  #include "testing/SimulationInputManager.h"  // Simulation input for testing
-  SimulationInputManager simInput;
-  IInputManager* input = &simInput;            // Pointer to input manager interface
-#else
-  #include "InputManager.h"                      // Hardware input manager
-  InputManager hwInput;
-  IInputManager* input = &hwInput;              // Pointer to input manager interface
-#endif
+InputManager hwInput;
+IInputManager* input = &hwInput;
 
 DisplayManager display;        // Manages display output
 BatteryManager battery;        // Handles battery monitoring
@@ -23,22 +15,29 @@ GameSetup gameSetup;           // Manages game setup procedures
 GameState gameState;           // Maintains current game state
 
 void setup() {
+  Serial.println("[Main] Setup starting...");
   Serial.begin(115200);
   display.begin();  // Initialize e-paper display
+  Serial.println("[Main] Display initialized");
   input->begin();              // Initialize input system
+  Serial.println("[Main] Input system initialized");
 
   if (!network.hasHost()) {
+    Serial.println("[Main] No host detected, assuming host role");
     device.assumeHostRole();   // No host found, assume host role
     gameSetup.begin();         // Configure game settings (players, starting life)
   } else {
+    Serial.println("[Main] Host detected, assuming player role");
     device.assumePlayerRole(1); // Host found, assume player role and wait for parameters
     // Wait to receive game parameters from the host
   }
 
   delay(500);                  // Prepare game setup environment
+  Serial.println("[Main] Game setup environment prepared");
 
   if (device.isHost()) {
     gameState.begin(device.getPlayerId(), gameSetup.getStartingLife());
+    Serial.printf("[Main] Game state initialized for player %d with life %d\n", device.getPlayerId(), gameSetup.getStartingLife());
     for (int id = 0; id < gameSetup.getPlayerCount(); ++id) {
       display.renderPlayerState(id, gameState.getPlayerState(id));
       Serial.printf("[Render] Drawing player %d\n", id);
@@ -49,6 +48,7 @@ void setup() {
       delay(100);
     }
     gameState.begin(device.getPlayerId(), gameSetup.getStartingLife());
+    Serial.printf("[Main] Game state initialized for player %d with life %d\n", device.getPlayerId(), gameSetup.getStartingLife());
     for (int id = 0; id < gameSetup.getPlayerCount(); ++id) {
       display.renderPlayerState(id, gameState.getPlayerState(id));
       Serial.printf("[Render] Drawing player %d\n", id);
@@ -59,7 +59,7 @@ void setup() {
 void loop() {
   static unsigned long lastHeartbeat = 0;
     if (millis() - lastHeartbeat > 3000) {
-    Serial.println("[Loop] heartbeat...");
+    Serial.printf("[Loop] Heartbeat - Player ID: %d, Is Host: %d\n", device.getPlayerId(), device.isHost());
     lastHeartbeat = millis();
     }
 
@@ -74,18 +74,15 @@ void loop() {
 
   if (input->wasButtonShortPressed()) {
     Serial.println("Short press detected");  // Handle short button press action
+    Serial.printf("[Input] Rotation delta: %d\n", input->getRotation());
   }
 
   if (input->wasButtonLongPressed()) {
     Serial.println("Long press detected");
+    Serial.printf("[Input] Rotation delta: %d\n", input->getRotation());
     if (gameState.getPlayerState(device.getPlayerId()).isTurn) {
       network.sendTurnAdvanceRequest(device.getPlayerId());
     }
-  }
-
-  if (input->getRotation() != 0) {
-    Serial.printf("[Main] Life change detected: %d\n", input->getRotation());
-    Serial.printf("[Loop] getRotation: %d\n", input->getRotation());
   }
 
   delay(10);                   // Small delay to debounce inputs and reduce CPU usage

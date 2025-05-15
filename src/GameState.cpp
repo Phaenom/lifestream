@@ -1,10 +1,12 @@
 #include "GameState.h"
+#include "GameSetup.h"
 #include "NetworkManager.h"
 
 extern DisplayManager display;
 extern NetworkManager network;
 
 void GameState::begin(int id, int life) {
+    Serial.println("[GameSetup] Host beginning game setup...");
     localPlayerId = id;
     startingLife = life;
     currentTurnPlayer = 0;

@@ -1,8 +1,12 @@
+// DisplayManager.cpp
+// Responsible for rendering player state to the e-paper display
+// Includes life totals, poison counters, and turn indicators
+
 #include <algorithm>
 #include "DisplayManager.h"
 #include "Config.h"
 
-// Defines screen coordinates for life, poison, and turn marker per player
+// Defines screen regions for each player's life, poison, and turn marker display.
 struct PlayerDisplayRegion {
     int lifeX, lifeY;
     int poisonX, poisonY;
@@ -11,139 +15,66 @@ struct PlayerDisplayRegion {
 
 const PlayerDisplayRegion PLAYER_LAYOUT[4] = {
     {40, 25, 40, 40, 5, 10},     // Player 1 (top left)
-    {180, 25, 180, 40, 245, 10}, // Player 2 (top right)
+    {150, 25, 150, 40, 245, 10}, // Player 2 (top right, adjusted from 180 to 150)
     {40, 90, 40, 105, 5, 75},    // Player 3 (bottom left)
-    {180, 90, 180, 105, 245, 75} // Player 4 (bottom right)
+    {150, 90, 150, 105, 245, 75} // Player 4 (bottom right, adjusted from 180 to 150)
 };
 
-#ifdef WOKWI
-DisplayManager::DisplayManager()
-    : display(GxEPD2_290(5, 17, 16, 4)) {
-}
-#else
 DisplayManager::DisplayManager() {}
-#endif
 
+// Initializes the e-paper display, clears the screen, and prepares a drawing buffer.
 void DisplayManager::begin() {
-//     #ifdef WOKWI
-//     display.init(115200);
-//     display.setRotation(1);
-//     display.setFont(&FreeMonoBold9pt7b);
-//     display.setTextColor(GxEPD_BLACK);
-//     display.setFullWindow();
+    EPD_2IN9_V2_Init();
+    EPD_2IN9_V2_Clear();
 
-//     display.firstPage();
-//     do {
-//         for (int id = 0; id < 4; ++id) {
-//             const auto& region = PLAYER_LAYOUT[id];
-
-//             // Full life string
-//             String lifeVal = (20 - id * 5 <= 0 ? "ELIM" : String(20 - id * 5));
-//             String lifeLine = "P" + String(id + 1) + ": " + lifeVal;
-//             int lifeTextWidth = lifeLine.length() * 6;
-//             int lifeX = region.lifeX - lifeTextWidth / 2;
-//             display.setCursor(lifeX, region.lifeY);
-//             display.print(lifeLine);
-
-//             // Full poison string
-//             String poisonLine = "P" + String(id + 1) + " PSN: " + String(id * 2);
-//             int poisonTextWidth = poisonLine.length() * 6;
-//             int poisonX = region.poisonX - poisonTextWidth / 2;
-//             display.setCursor(poisonX, region.poisonY);
-//             display.print(poisonLine);
-
-//             // Turn marker
-//             display.setCursor(region.turnX, region.turnY);
-//             display.print(id == 0 ? "*" : " ");
-//         }
-//     } while (display.nextPage());
-// #else
-//     EPD_2IN9_V2_Init();
-//     EPD_2IN9_V2_Clear();
-
-//     frameBuffer = (UBYTE*)malloc(EPD_2IN9_V2_WIDTH * EPD_2IN9_V2_HEIGHT / 8);
-//     Paint_NewImage(frameBuffer, EPD_2IN9_V2_WIDTH, EPD_2IN9_V2_HEIGHT, 0, WHITE);
-//     Paint_SelectImage(frameBuffer);
-//     Paint_Clear(WHITE);
-// #endif
-
-#ifdef WOKWI
-  display.init(115200);
-  display.setRotation(1);
-  display.setFullWindow();
-  display.setTextColor(GxEPD_BLACK);
-  display.setFont();
-
-  display.firstPage();
-  do {
-    display.fillScreen(GxEPD_WHITE);
-    display.drawRect(10, 10, 100, 50, GxEPD_BLACK);  // Visual check
-    display.setCursor(20, 40);
-    display.print("HELLO WOKWI");
-  } while (display.nextPage());
-#endif
-
+    // Allocate display buffer and initialize drawing context
+    frameBuffer = (UBYTE*)malloc(EPD_2IN9_V2_WIDTH * EPD_2IN9_V2_HEIGHT / 8);
+    Paint_NewImage(frameBuffer, EPD_2IN9_V2_WIDTH, EPD_2IN9_V2_HEIGHT, 0, WHITE);
+    Paint_SelectImage(frameBuffer);
+    Paint_Clear(WHITE);
+    Serial.println("[Display] Display initialized and cleared");
 }
 
 /**
- * Draws a blinking circle to indicate current player's turn.
+ * Draws a blinking circle at the specified (x, y) to indicate the active player's turn.
+ * Alternates fill color each call to create a blinking effect.
  */
 void DisplayManager::drawTurnMarker(int x, int y) {
-    #ifdef WOKWI
-    static unsigned long lastUpdate = 0;
-    unsigned long now = millis();
-    if (now - lastUpdate >= 1000) {
-        display.firstPage();
-        do {
-            display.setCursor(x, y);
-            display.print(toggle ? "*" : " ");
-        } while (display.nextPage());
-        toggle = !toggle;
-        lastUpdate = now;
-    }
-#else
+    static int lastX = -1, lastY = -1;
+    static bool lastState = false;
+    if (x == lastX && y == lastY && toggle == lastState) return;
+    lastX = x;
+    lastY = y;
+    lastState = toggle;
+
+    x = std::max(5, std::min(x, EPD_2IN9_V2_WIDTH - 5));
+    y = std::max(5, std::min(y, EPD_2IN9_V2_HEIGHT - 5));
     if (toggle) {
         Paint_DrawCircle(x, y, 5, BLACK, DOT_PIXEL_1X1, DRAW_FILL_FULL);
     } else {
         Paint_DrawCircle(x, y, 5, WHITE, DOT_PIXEL_1X1, DRAW_FILL_FULL);
     }
+    Serial.printf("[Display] Drawing turn marker at (%d, %d), state: %s\n", x, y, toggle ? "BLACK" : "WHITE");
     toggle = !toggle;
     EPD_2IN9_V2_Display(frameBuffer);
-#endif
 }
 
+// Updates the turn indicator for the specified player.
+// If isTurn is true, activates the blinking turn marker.
 void DisplayManager::updateTurnIndicator(uint8_t playerId, bool isTurn) {
-#ifdef WOKWI
     if (playerId >= 4) return;
     const auto& region = PLAYER_LAYOUT[playerId];
     if (isTurn) toggle = true;
     drawTurnMarker(region.turnX, region.turnY);
-#else
-    if (playerId >= 4) return;
-    const auto& region = PLAYER_LAYOUT[playerId];
-    if (isTurn) toggle = true;
-    drawTurnMarker(region.turnX, region.turnY);
-#endif
 }
 
+// Renders the life total for the specified player in their assigned screen region.
+// Displays "ELIMINATED" if life is zero or below.
 void DisplayManager::drawLife(uint8_t playerId, int life) {
-#ifdef WOKWI
-    if (playerId >= 4) return;
-    static unsigned long lastLifeUpdate[4] = {0};
-    unsigned long now = millis();
-    if (now - lastLifeUpdate[playerId] >= 1000) {
-        const auto& region = PLAYER_LAYOUT[playerId];
-        String lifeStr = (life <= 0 ? "ELIM" : String(life));
-        int textWidth = lifeStr.length() * 6;  // Approximate width
-        int x = region.lifeX - textWidth / 2;
-        display.firstPage();
-        do {
-            display.setCursor(x, region.lifeY);
-            display.printf("P%d: %s", playerId + 1, lifeStr.c_str());
-        } while (display.nextPage());
-        lastLifeUpdate[playerId] = now;
-    }
-#else
+    static int lastLife[4] = {-1, -1, -1, -1};
+    if (lastLife[playerId] == life) return;
+    lastLife[playerId] = life;
+
     if (playerId >= 4) return;
     const auto& region = PLAYER_LAYOUT[playerId];
     const char* str;
@@ -155,64 +86,76 @@ void DisplayManager::drawLife(uint8_t playerId, int life) {
         str = buf;
     }
     int textWidth = strlen(str) * Font12.Width;
-    int x = std::min(region.lifeX, 296 - textWidth);
-    int y = std::min(region.lifeY - 12, 128 - 16);
-    Paint_ClearWindows(x, y, x + 100, y + 20, WHITE);
+    int x = region.lifeX - textWidth / 2;
+    x = std::max(0, std::min(x, EPD_2IN9_V2_WIDTH - textWidth));
+    int y = std::max(0, std::min(region.lifeY - 12, 128 - 16));
+    int x2 = std::min(x + 100, EPD_2IN9_V2_WIDTH);
+    int y2 = std::min(y + 20, EPD_2IN9_V2_HEIGHT);
+    Paint_ClearWindows(x, y, x2, y2, WHITE);
     Paint_DrawString_EN(x, y, str, &Font12, BLACK, WHITE);
+    Serial.printf("[Display] Drawing life for P%d: %s\n", playerId + 1, str);
     EPD_2IN9_V2_Display(frameBuffer);
-#endif
 }
 
+// Renders the poison counter for the specified player in their assigned screen region.
 void DisplayManager::drawPoison(uint8_t playerId, int poison) {
-#ifdef WOKWI
-    if (playerId >= 4) return;
-    static unsigned long lastPoisonUpdate[4] = {0};
-    unsigned long now = millis();
-    if (now - lastPoisonUpdate[playerId] >= 1000) {
-        const auto& region = PLAYER_LAYOUT[playerId];
-        String poisonStr = String(poison);
-        int textWidth = poisonStr.length() * 6;  // Approximate width
-        int x = region.poisonX - textWidth / 2;
-        display.firstPage();
-        do {
-            display.setCursor(x, region.poisonY);
-            display.printf("P%d PSN: %d", playerId + 1, poison);
-        } while (display.nextPage());
-        lastPoisonUpdate[playerId] = now;
-    }
-#else
+    static int lastPoison[4] = {-1, -1, -1, -1};
+    if (lastPoison[playerId] == poison) return;
+    lastPoison[playerId] = poison;
+
     if (playerId >= 4) return;
     const auto& region = PLAYER_LAYOUT[playerId];
     char buf[10];
     snprintf(buf, sizeof(buf), "%d", poison);
     int textWidth = strlen(buf) * Font12.Width;
-    int x = std::min(region.poisonX, 296 - textWidth);
-    int y = std::min(region.poisonY - 12, 128 - 16);
-    Paint_ClearWindows(x, y, x + 30, y + 20, WHITE);
+    int x = region.poisonX - textWidth / 2;
+    x = std::max(0, std::min(x, EPD_2IN9_V2_WIDTH - textWidth));
+    int y = std::max(0, std::min(region.poisonY - 12, 128 - 16));
+    int x2 = std::min(x + 30, EPD_2IN9_V2_WIDTH);
+    int y2 = std::min(y + 20, EPD_2IN9_V2_HEIGHT);
+    Paint_ClearWindows(x, y, x2, y2, WHITE);
     Paint_DrawString_EN(x, y, buf, &Font12, BLACK, WHITE);
+    Serial.printf("[Display] Drawing poison for P%d: %s\n", playerId + 1, buf);
     EPD_2IN9_V2_Display(frameBuffer);
-#endif
 }
 
 /**
- * Renders the full state for a single player (life, poison, turn).
+ * Renders the full state (life, poison, turn marker) for the given player ID.
+ * Combines calls to drawLife, drawPoison, and updateTurnIndicator.
  */
 void DisplayManager::renderPlayerState(uint8_t playerId, const PlayerState& state) {
-    #ifdef WOKWI
     if (playerId >= 4) return;
-    static PlayerState lastRendered[4];
 
-    if (memcmp(&lastRendered[playerId], &state, sizeof(PlayerState)) != 0) {
-        drawLife(playerId, state.eliminated ? 0 : state.life);
-        drawPoison(playerId, state.poison);
-        updateTurnIndicator(playerId, state.isTurn);
-        lastRendered[playerId] = state;
+    static unsigned long lastUpdateTime[4] = {0, 0, 0, 0};
+
+    unsigned long now = millis();
+    if (now - lastUpdateTime[playerId] < 1000) return;  // Skip update if less than 1000ms since last for this player
+    lastUpdateTime[playerId] = now;
+
+    Serial.printf("[Display] Rendering state for P%d — Life: %d, Poison: %d, Turn: %d\n",
+                  playerId + 1,
+                  state.eliminated ? 0 : state.life,
+                  state.poison,
+                  state.isTurn);
+
+    static int cachedLife[4] = {-1, -1, -1, -1};
+    static int cachedPoison[4] = {-1, -1, -1, -1};
+    static bool cachedTurn[4] = {false, false, false, false};
+
+    int currentLife = state.eliminated ? 0 : state.life;
+
+    if (cachedLife[playerId] != currentLife) {
+        cachedLife[playerId] = currentLife;
+        drawLife(playerId, currentLife);
     }
-#else
-    if (playerId >= 4) return;
 
-    drawLife(playerId, state.eliminated ? 0 : state.life);
-    drawPoison(playerId, state.poison);
-    updateTurnIndicator(playerId, state.isTurn);
-#endif
+    if (cachedPoison[playerId] != state.poison) {
+        cachedPoison[playerId] = state.poison;
+        drawPoison(playerId, state.poison);
+    }
+
+    if (cachedTurn[playerId] != state.isTurn) {
+        cachedTurn[playerId] = state.isTurn;
+        updateTurnIndicator(playerId, state.isTurn);
+    }
 }

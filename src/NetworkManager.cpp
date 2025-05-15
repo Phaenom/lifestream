@@ -13,6 +13,7 @@ void onDataReceived(const uint8_t *mac, const uint8_t *data, int len) {
 
     GameSyncPacket packet;
     memcpy(&packet, data, sizeof(GameSyncPacket));
+    Serial.printf("[NetworkManager] Packet type: %d, Target player: %d\n", packet.type, packet.playerId);
 
     if (packet.playerId >= 4) return;
 
@@ -55,6 +56,7 @@ void NetworkManager::sendGameSetup(uint8_t playerCount, uint8_t startingLife) {
     packet.playerCount = playerCount;
     packet.life = startingLife;
 
+    Serial.printf("[NetworkManager] Sending setup packet: playerCount=%d, life=%d\n", playerCount, startingLife);
     esp_err_t result = esp_now_send(nullptr, (uint8_t*)&packet, sizeof(packet));
     Serial.printf("[NetworkManager] sendGameSetup result: %d\n", result);
 }
@@ -68,6 +70,8 @@ void NetworkManager::sendGameState(uint8_t playerId, const PlayerState& state) {
     packet.isTurn = state.isTurn;
     packet.eliminated = state.eliminated;
 
+    Serial.printf("[NetworkManager] Sending game state: playerId=%d, life=%d, poison=%d, turn=%d, eliminated=%d\n",
+                  playerId, state.life, state.poison, state.isTurn, state.eliminated);
     esp_err_t result = esp_now_send(nullptr, (uint8_t*)&packet, sizeof(packet));
     Serial.printf("[NetworkManager] sendGameState result: %d\n", result);
 }
@@ -77,12 +81,16 @@ void NetworkManager::sendTurnAdvanceRequest(uint8_t playerId) {
     packet.type = PACKET_TYPE_TURN_REQUEST;
     packet.playerId = playerId;
 
+    Serial.printf("[NetworkManager] Sending turn request from playerId=%d\n", playerId);
     esp_err_t result = esp_now_send(nullptr, (uint8_t*)&packet, sizeof(packet));
     Serial.printf("[NetworkManager] sendTurnAdvanceRequest result: %d\n", result);
 }
 
 bool NetworkManager::hasHost() const {
-    // Placeholder logic: always return false to simulate no host present
-    // Replace with actual peer discovery logic in the future
+    // TODO: Implement real peer discovery logic
     return false;
+}
+
+bool NetworkManager::hasReceivedGameParams() const {
+    return gameSetup.isConfigured();
 }

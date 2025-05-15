@@ -16,6 +16,7 @@ public:
 private:
     bool host = false;
     uint8_t playerId = 0;
+    unsigned long lastUpdateTime = 0;
 };
 
 #endif // DEVICEMANAGER_H

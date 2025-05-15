@@ -23,14 +23,12 @@ struct GameSyncPacket {
 
 class NetworkManager {
 public:
-#ifdef WOKWI
-    bool hasReceivedGameParams() const { return true; }
-#endif
     void begin();
     void sendGameState(uint8_t playerId, const PlayerState& state);
     void sendGameSetup(uint8_t playerCount, uint8_t startingLife);
     void sendTurnAdvanceRequest(uint8_t playerId);
     bool hasHost() const;
+    bool hasReceivedGameParams() const;
 };
 
 #endif

@@ -12,10 +12,8 @@ public:
     bool wasButtonShortPressed() const override;
     bool wasButtonLongPressed() const override;
 
-#ifdef WOKWI
-    void simulateRotation(int delta) override;
+    void simulateRotation(int delta);
     void simulateButtonPress(bool held);
-#endif
 
 private:
     mutable int rotationDelta = 0;

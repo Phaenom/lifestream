@@ -24,7 +24,6 @@ void IRAM_ATTR encoderISR() {
 }
 
 void InputManager::begin() {
-#ifndef WOKWI
     // Configure encoder pins as input with pull-up resistors
     pinMode(ENCODER_PIN_A, INPUT_PULLUP);
     pinMode(ENCODER_PIN_B, INPUT_PULLUP);
@@ -33,22 +32,17 @@ void InputManager::begin() {
 
     // Attach interrupt to encoder pin A to detect changes and call encoderISR
     attachInterrupt(digitalPinToInterrupt(ENCODER_PIN_A), encoderISR, CHANGE);
-#else
-    Serial.println("[InputManager] WOKWI mode: skipping hardware initialization.");
-#endif
+
+    Serial.println("[InputManager] Hardware input initialized (encoder + button)");
 }
 
 void InputManager::update() {
-#ifndef WOKWI
     noInterrupts();
     rotationDelta = encoderPosition;
     encoderPosition = 0;
     interrupts();
-#else
-    // rotationDelta is manipulated via simulateRotation()
-#endif
 
-    Serial.printf("[InputManager] Rotation delta: %d\n", rotationDelta);
+    //Serial.printf("[InputManager] Rotation delta: %d\n", rotationDelta);
 
     // Static variable to remember last button state across calls
     static bool lastButton = HIGH;
@@ -84,6 +78,7 @@ void InputManager::update() {
 // Returns the amount of rotation detected since the last call and resets the delta
 int InputManager::getRotation() const {
     int delta = rotationDelta;
+    //Serial.printf("[InputManager] getRotation(): %d\n", delta);
     rotationDelta = 0;
     return delta;
 }
@@ -91,6 +86,7 @@ int InputManager::getRotation() const {
 // Returns true if a short button press was detected since the last call, then clears the flag
 bool InputManager::wasButtonShortPressed() const {
     bool result = shortPressDetected;
+    if (result) Serial.println("[InputManager] Detected short press event");
     shortPressDetected = false;
     return result;
 }
@@ -98,6 +94,7 @@ bool InputManager::wasButtonShortPressed() const {
 // Returns true if a long button press was detected since the last call, then clears the flag
 bool InputManager::wasButtonLongPressed() const {
     bool result = longPressDetected;
+    if (result) Serial.println("[InputManager] Detected long press event");
     longPressDetected = false;
     return result;
 }

@@ -67,7 +67,6 @@ bool SimulationInputManager::wasButtonLongPressed() const {
     return result;
 }
 
-#ifdef WOKWI
 void SimulationInputManager::simulateRotation(int delta) {
     rotationDelta += delta;
     Serial.printf("[SimInput] simulateRotation called: delta=%d, new value=%d\n", delta, rotationDelta);
@@ -77,15 +76,12 @@ void SimulationInputManager::simulateButtonPress(bool held) {
     unsigned long now = millis();
 
     if (held && !buttonHeld) {
-        // Begin button press
         buttonPressTime = now;
         buttonHeld = true;
     } else if (!held && buttonHeld) {
-        // Release button and classify press type
         unsigned long duration = now - buttonPressTime;
         if (duration >= 1000) longPressDetected = true;
         else shortPressDetected = true;
         buttonHeld = false;
     }
 }
-#endif

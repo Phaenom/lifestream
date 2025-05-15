@@ -21,11 +21,6 @@ public:
     // Check if the input button was long pressed.
     virtual bool wasButtonLongPressed() const = 0;
 
-#ifdef WOKWI
-    // Set mock rotation input for simulation
-    virtual void simulateRotation(int delta) = 0;
-#endif
-
     virtual ~IInputManager() {}
 };
 
