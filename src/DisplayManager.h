@@ -6,6 +6,7 @@
 #include "e-Paper/EPD_2in9_V2.h"
 #include "GUI/GUI_Paint.h"
 #include "Fonts/Fonts.h"
+#include "assets/mtg_logo_symbol.h"
 
 // Struct representing a single player's current game state
 struct PlayerState {

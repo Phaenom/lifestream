@@ -6,6 +6,9 @@
 #include "DisplayManager.h"
 #include "Config.h"
 
+const int logoX = 110;
+const int logoY = 55;
+
 // Defines screen regions for each player's life, poison, and turn marker display.
 struct PlayerDisplayRegion {
     int lifeX, lifeY;
@@ -26,7 +29,6 @@ DisplayManager::DisplayManager() {}
 void DisplayManager::begin() {
     // Initialize hardware interfaces
     DEV_Module_Init();
-
     EPD_2IN9_V2_Init();
     EPD_2IN9_V2_Clear();
 
@@ -36,9 +38,18 @@ void DisplayManager::begin() {
     Paint_NewImage(frameBuffer, EPD_2IN9_V2_WIDTH, EPD_2IN9_V2_HEIGHT, 0, WHITE);
     Paint_SelectImage(frameBuffer);
     Paint_Clear(WHITE);
+
+    // Draw persistent MTG logo
+    const int logoX = 110;
+    const int logoY = 55;
+    Paint_SetRotate(ROTATE_270);
+    Paint_ClearWindows(logoX, logoY, logoX + MTG_LOGO_SYMBOL_WIDTH, logoY + MTG_LOGO_SYMBOL_HEIGHT, WHITE);
+    drawLogo(logoX, logoY);
+
+    EPD_2IN9_V2_Display(frameBuffer);
     Serial.println("[Display] Display initialized and cleared");
 
-    DEV_Delay_ms(500);
+    DEV_Delay_ms(10);
 }
 
 /**
@@ -171,5 +182,19 @@ void DisplayManager::renderPlayerState(uint8_t playerId, const PlayerState& stat
 void DisplayManager::renderAllPlayerStates(const GameState& state) {
     for (int i = 0; i < 4; ++i) {
         renderPlayerState(i, state.getPlayerState(i));
+    }
+}
+
+void DisplayManager::drawLogo(int x, int y) {
+    for (int j = 0; j < MTG_LOGO_SYMBOL_HEIGHT; j++) {
+        for (int i = 0; i < MTG_LOGO_SYMBOL_WIDTH; i++) {
+            int byteIndex = (i + j * MTG_LOGO_SYMBOL_WIDTH) / 8;
+            int bitIndex = 7 - (i % 8);
+
+            if (mtg_logo_symbol[byteIndex] & (1 << bitIndex)) {
+                // Set pixel in buffer
+                Paint_DrawPoint(x + i, y + j, BLACK, DOT_PIXEL_1X1, DOT_STYLE_DFT);
+            }
+        }
     }
 }
