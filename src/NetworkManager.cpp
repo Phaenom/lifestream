@@ -8,12 +8,36 @@ extern GameState gameState;
 extern DeviceManager device;
 
 void NetworkManager::begin() {
+    WiFi.mode(WIFI_STA); // REQUIRED for ESP-NOW to work correctly
+    
+    esp_wifi_set_promiscuous(true);
+    wifi_second_chan_t second;
+    esp_wifi_set_channel(1, WIFI_SECOND_CHAN_NONE); // force channel 1
+    esp_wifi_set_promiscuous(false);
+    
     if (esp_now_init() != ESP_OK) {
         Serial.println("ESP-NOW init failed");
         return;
     }
+
     esp_now_register_recv_cb(onDataReceived);
     Serial.println("[NetworkManager] ESP-NOW initialized and callback registered.");
+
+    // Host discovery window
+    Serial.println("[NetworkManager] Waiting for host broadcast...");
+    unsigned long start = millis();
+    while (millis() - start < 3000) {
+        if (gameSetup.isConfigured()) {
+            Serial.println("[NetworkManager] Host detected. Acting as client.");
+            return;
+        }
+        delay(50);
+}
+
+    Serial.println("[NetworkManager] No host found. Assuming host role.");
+    device.assumeHostRole();
+    gameSetup.begin();
+    sendGameSetup(gameSetup.getPlayerCount(), gameSetup.getStartingLife());
 }
 
 void NetworkManager::onDataReceived(const uint8_t *mac, const uint8_t *data, int len) {
@@ -31,6 +55,7 @@ void NetworkManager::onDataReceived(const uint8_t *mac, const uint8_t *data, int
         device.setIsHost(false); // This device is now a client
         gameSetup.setFromNetwork(packet.playerCount, packet.life);
         gameState.begin(device.getPlayerId(), packet.life);
+        Serial.printf("[NetworkManager] Game state initialized for player %d with life %d\n", device.getPlayerId(), packet.life);
     } else if (packet.type == PACKET_TYPE_PLAYER_UPDATE) {
         Serial.printf("[NetworkManager] Received player update packet: playerId=%d, life=%d, poison=%d, isTurn=%d, eliminated=%d\n",
                       packet.playerId, packet.life, packet.poison, packet.isTurn, packet.eliminated);
@@ -53,6 +78,7 @@ void NetworkManager::onDataReceived(const uint8_t *mac, const uint8_t *data, int
             uint8_t newId = nextAvailableId();
             if (newId < 4) {
                 sendPlayerAssign(mac, newId);
+                sendGameSetupTo(mac, gameSetup.getPlayerCount(), gameSetup.getStartingLife());
             } else {
                 Serial.println("[NetworkManager] No player slots available");
             }
@@ -103,8 +129,12 @@ void NetworkManager::sendTurnAdvanceRequest(uint8_t playerId) {
 void NetworkManager::sendJoinRequest() {
     GameSyncPacket packet = {};
     packet.type = PACKET_TYPE_JOIN_REQUEST;
-    Serial.println("[NetworkManager] Sending join request");
-    esp_now_send(nullptr, (uint8_t*)&packet, sizeof(packet));
+    if (!device.isHost()) {
+        Serial.println("[NetworkManager] Sending join request");
+        esp_now_send(nullptr, (uint8_t*)&packet, sizeof(packet));
+    } else {
+        Serial.println("[NetworkManager] Not sending join request (this device is host)");
+    }
 }
 
 void NetworkManager::sendPlayerAssign(const uint8_t* dest, uint8_t playerId) {
@@ -133,4 +163,15 @@ bool NetworkManager::hasHost() const {
 
 bool NetworkManager::hasReceivedGameParams() const {
     return gameSetup.isConfigured();
+}
+
+void NetworkManager::sendGameSetupTo(const uint8_t* dest, uint8_t playerCount, uint8_t startingLife) {
+    GameSyncPacket packet = {};
+    packet.type = PACKET_TYPE_SETUP;
+    packet.playerCount = playerCount;
+    packet.life = startingLife;
+
+    Serial.printf("[NetworkManager] Sending setup to peer: playerCount=%d, life=%d\n", playerCount, startingLife);
+    esp_err_t result = esp_now_send(dest, (uint8_t*)&packet, sizeof(packet));
+    Serial.printf("[NetworkManager] sendGameSetupTo result: %d\n", result);
 }

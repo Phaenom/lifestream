@@ -8,6 +8,7 @@ void GameSetup::begin() {
     startingLife = 20;
     playerCount = 4;
     Serial.printf("[GameSetup] Default setup — Players: %d, Starting Life: %d\n", playerCount, startingLife);
+    configured = true;  // Simulate configuration for testing
 }
 
 int GameSetup::getStartingLife() const {

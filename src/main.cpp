@@ -27,15 +27,26 @@ GameState gameState;           // Maintains current gameState state
 void setup() {
   Serial.println("[Main] Setup starting...");
   Serial.begin(115200);
-  display.begin();  // Initialize e-paper display
+
+  display.begin();    // Initialize e-paper display
   Serial.println("[Main] Display initialized");
-  input->begin();              // Initialize input system
+
+  input->begin();     // Initialize input system
   Serial.println("[Main] Input system initialized");
+
+  network.begin();    // Initialize network system
+  Serial.println("[Main] Network initialized");
 
   // Assume host until setup packet is received
   device.assumeHostRole();
+
   gameSetup.begin();
-  network.sendJoinRequest();
+
+  if (!device.isHost()) {
+    network.sendJoinRequest();
+  }
+
+  network.sendGameSetup(gameSetup.getPlayerCount(), gameSetup.getStartingLife());
 
   delay(500);                  // Prepare game setup environment
   Serial.println("[Main] Game setup environment prepared");

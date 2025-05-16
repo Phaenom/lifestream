@@ -7,6 +7,7 @@
 #include <esp_now.h>
 #include <WiFi.h>
 #include "DisplayManager.h"
+#include "esp_wifi.h"
 
 constexpr uint8_t PACKET_TYPE_SETUP         = 0;
 constexpr uint8_t PACKET_TYPE_PLAYER_UPDATE = 1;
@@ -35,6 +36,8 @@ public:
     bool hasHost() const;
     bool hasReceivedGameParams() const;
     void sendJoinRequest();
+    static void sendGameSetupTo(const uint8_t* dest, uint8_t playerCount, uint8_t startingLife);
+
 
 private:
     static void onDataReceived(const uint8_t* mac, const uint8_t* data, int len);
