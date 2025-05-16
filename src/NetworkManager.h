@@ -34,4 +34,6 @@ public:
     bool hasReceivedGameParams() const;
 };
 
+void onDataReceived(const uint8_t* mac, const uint8_t* data, int len);
+
 #endif
