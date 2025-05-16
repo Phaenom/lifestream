@@ -32,8 +32,9 @@ public:
     void sendTurnAdvanceRequest(uint8_t playerId);
     bool hasHost() const;
     bool hasReceivedGameParams() const;
-};
 
-void onDataReceived(const uint8_t* mac, const uint8_t* data, int len);
+private:
+    static void onDataReceived(const uint8_t* mac, const uint8_t* data, int len);
+};
 
 #endif
