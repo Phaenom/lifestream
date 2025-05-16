@@ -11,6 +11,8 @@
 constexpr uint8_t PACKET_TYPE_SETUP         = 0;
 constexpr uint8_t PACKET_TYPE_PLAYER_UPDATE = 1;
 constexpr uint8_t PACKET_TYPE_TURN_REQUEST  = 2;
+constexpr uint8_t PACKET_TYPE_JOIN_REQUEST  = 3;
+constexpr uint8_t PACKET_TYPE_PLAYER_ASSIGN = 4;
 
 #pragma pack(push, 1)
 struct GameSyncPacket {
@@ -32,9 +34,12 @@ public:
     void sendTurnAdvanceRequest(uint8_t playerId);
     bool hasHost() const;
     bool hasReceivedGameParams() const;
+    void sendJoinRequest();
 
 private:
     static void onDataReceived(const uint8_t* mac, const uint8_t* data, int len);
+    static void sendPlayerAssign(const uint8_t* dest, uint8_t playerId);
+    static uint8_t nextAvailableId();
 };
 
 #endif

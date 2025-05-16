@@ -23,3 +23,7 @@ bool DeviceManager::isHost() const {
 uint8_t DeviceManager::getPlayerId() const {
     return playerId;
 }
+
+void DeviceManager::setIsHost(bool value) {
+    host = value;
+}

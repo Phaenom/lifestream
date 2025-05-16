@@ -28,9 +28,9 @@ void NetworkManager::onDataReceived(const uint8_t *mac, const uint8_t *data, int
 
     if (packet.type == PACKET_TYPE_SETUP) {
         Serial.printf("[NetworkManager] Received setup packet: playerCount=%d, life=%d\n", packet.playerCount, packet.life);
+        device.setIsHost(false); // This device is now a client
         gameSetup.setFromNetwork(packet.playerCount, packet.life);
         gameState.begin(device.getPlayerId(), packet.life);
-
     } else if (packet.type == PACKET_TYPE_PLAYER_UPDATE) {
         Serial.printf("[NetworkManager] Received player update packet: playerId=%d, life=%d, poison=%d, isTurn=%d, eliminated=%d\n",
                       packet.playerId, packet.life, packet.poison, packet.isTurn, packet.eliminated);
@@ -47,6 +47,20 @@ void NetworkManager::onDataReceived(const uint8_t *mac, const uint8_t *data, int
         if (device.isHost() && packet.playerId == gameState.getCurrentTurnPlayer()) {
             gameState.nextTurn();
         }
+    } else if (packet.type == PACKET_TYPE_JOIN_REQUEST) {
+        Serial.println("[NetworkManager] Received join request");
+        if (device.isHost()) {
+            uint8_t newId = nextAvailableId();
+            if (newId < 4) {
+                sendPlayerAssign(mac, newId);
+            } else {
+                Serial.println("[NetworkManager] No player slots available");
+            }
+        }
+    } else if (packet.type == PACKET_TYPE_PLAYER_ASSIGN) {
+        Serial.printf("[NetworkManager] Assigned playerId=%d\n", packet.playerId);
+        device.assumePlayerRole(packet.playerId);
+        gameState.begin(packet.playerId, gameSetup.getStartingLife());
     }
 }
 
@@ -84,6 +98,32 @@ void NetworkManager::sendTurnAdvanceRequest(uint8_t playerId) {
     Serial.printf("[NetworkManager] Sending turn request from playerId=%d\n", playerId);
     esp_err_t result = esp_now_send(nullptr, (uint8_t*)&packet, sizeof(packet));
     Serial.printf("[NetworkManager] sendTurnAdvanceRequest result: %d\n", result);
+}
+
+void NetworkManager::sendJoinRequest() {
+    GameSyncPacket packet = {};
+    packet.type = PACKET_TYPE_JOIN_REQUEST;
+    Serial.println("[NetworkManager] Sending join request");
+    esp_now_send(nullptr, (uint8_t*)&packet, sizeof(packet));
+}
+
+void NetworkManager::sendPlayerAssign(const uint8_t* dest, uint8_t playerId) {
+    GameSyncPacket packet = {};
+    packet.type = PACKET_TYPE_PLAYER_ASSIGN;
+    packet.playerId = playerId;
+    Serial.printf("[NetworkManager] Assigning player ID %d\n", playerId);
+    esp_now_send(dest, (uint8_t*)&packet, sizeof(packet));
+}
+
+uint8_t NetworkManager::nextAvailableId() {
+    static bool assigned[4] = {false};  // crude static tracker
+    for (uint8_t i = 1; i < 4; ++i) {
+        if (!assigned[i]) {
+            assigned[i] = true;
+            return i;
+        }
+    }
+    return 255;  // invalid ID if all are taken
 }
 
 bool NetworkManager::hasHost() const {

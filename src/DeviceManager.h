@@ -13,6 +13,8 @@ public:
     bool isHost() const;
     uint8_t getPlayerId() const;
 
+    void setIsHost(bool value);
+
 private:
     bool host = false;
     uint8_t playerId = 0;
