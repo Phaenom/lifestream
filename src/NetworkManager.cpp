@@ -7,6 +7,15 @@ extern GameSetup gameSetup;
 extern GameState gameState;
 extern DeviceManager device;
 
+void NetworkManager::begin() {
+    if (esp_now_init() != ESP_OK) {
+        Serial.println("ESP-NOW init failed");
+        return;
+    }
+    esp_now_register_recv_cb(onDataReceived);
+    Serial.println("[NetworkManager] ESP-NOW initialized and callback registered.");
+}
+
 void onDataReceived(const uint8_t *mac, const uint8_t *data, int len) {
     Serial.printf("[NetworkManager] Packet received from MAC: %02X:%02X:%02X:%02X:%02X:%02X\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
     if (len < sizeof(GameSyncPacket)) return;
@@ -41,17 +50,7 @@ void onDataReceived(const uint8_t *mac, const uint8_t *data, int len) {
     }
 }
 
-void NetworkManager::begin() {
-    if (esp_now_init() != ESP_OK) {
-        Serial.println("ESP-NOW init failed");
-        return;
-    }
-    esp_now_register_recv_cb(onDataReceived);
-    Serial.println("[NetworkManager] ESP-NOW initialized and callback registered.");
-}
-
 void NetworkManager::sendGameSetup(uint8_t playerCount, uint8_t startingLife) {
-#ifndef SIMULATION_MODE
     GameSyncPacket packet = {};
     packet.type = PACKET_TYPE_SETUP;
     packet.playerCount = playerCount;
@@ -60,13 +59,9 @@ void NetworkManager::sendGameSetup(uint8_t playerCount, uint8_t startingLife) {
     Serial.printf("[NetworkManager] Sending setup packet: playerCount=%d, life=%d\n", playerCount, startingLife);
     esp_err_t result = esp_now_send(nullptr, (uint8_t*)&packet, sizeof(packet));
     Serial.printf("[NetworkManager] sendGameSetup result: %d\n", result);
-#else
-    Serial.printf("[SimNet] Skipping sendGameSetup in simulation mode\n");
-#endif
 }
 
 void NetworkManager::sendGameState(uint8_t playerId, const PlayerState& state) {
-#ifndef SIMULATION_MODE
     GameSyncPacket packet;
     packet.playerId = playerId;
     packet.type = PACKET_TYPE_PLAYER_UPDATE;
@@ -79,13 +74,9 @@ void NetworkManager::sendGameState(uint8_t playerId, const PlayerState& state) {
                   playerId, state.life, state.poison, state.isTurn, state.eliminated);
     esp_err_t result = esp_now_send(nullptr, (uint8_t*)&packet, sizeof(packet));
     Serial.printf("[NetworkManager] sendGameState result: %d\n", result);
-#else
-    Serial.printf("[SimNet] Skipping sendGameState in simulation mode for playerId=%d\n", playerId);
-#endif
 }
 
 void NetworkManager::sendTurnAdvanceRequest(uint8_t playerId) {
-#ifndef SIMULATION_MODE
     GameSyncPacket packet = {};
     packet.type = PACKET_TYPE_TURN_REQUEST;
     packet.playerId = playerId;
@@ -93,9 +84,6 @@ void NetworkManager::sendTurnAdvanceRequest(uint8_t playerId) {
     Serial.printf("[NetworkManager] Sending turn request from playerId=%d\n", playerId);
     esp_err_t result = esp_now_send(nullptr, (uint8_t*)&packet, sizeof(packet));
     Serial.printf("[NetworkManager] sendTurnAdvanceRequest result: %d\n", result);
-#else
-    Serial.printf("[SimNet] Skipping sendTurnAdvanceRequest in simulation mode for playerId=%d\n", playerId);
-#endif
 }
 
 bool NetworkManager::hasHost() const {

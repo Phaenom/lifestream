@@ -1,8 +1,11 @@
 #ifndef NETWORK_MANAGER_H
 #define NETWORK_MANAGER_H
 
+#pragma once
+
 #include <Arduino.h>
 #include <esp_now.h>
+#include <WiFi.h>
 #include "DisplayManager.h"
 
 constexpr uint8_t PACKET_TYPE_SETUP         = 0;
