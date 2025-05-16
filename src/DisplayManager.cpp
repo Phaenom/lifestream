@@ -20,10 +20,10 @@ struct PlayerDisplayRegion {
 //   - poisonX, poisonY: center of player's poison counter display
 //   - turnX, turnY: location for player's turn indicator (blinking circle)
 const PlayerDisplayRegion PLAYER_LAYOUT[4] = {
-    {40, 30,  45, 49,   5, 10},     // Player 1: (LIFE X, LIFE Y, POISON X, POISON Y, TURN X, TURN Y)
-    {198, 30, 203, 49, 155, 10},    // Player 2: (LIFE X, LIFE Y, POISON X, POISON Y, TURN X, TURN Y)
-    {40, 90,  45, 109,  5, 75},     // Player 3: (LIFE X, LIFE Y, POISON X, POISON Y, TURN X, TURN Y)
-    {198, 90, 203, 109, 155, 75}    // Player 4: (LIFE X, LIFE Y, POISON X, POISON Y, TURN X, TURN Y)
+    {40, 30,  45, 49,  10, 30},     // Player 1: (LIFE X, LIFE Y, POISON X, POISON Y, TURN X, TURN Y)
+    {198, 30, 203, 49, 168, 30},    // Player 2: (LIFE X, LIFE Y, POISON X, POISON Y, TURN X, TURN Y)
+    {40, 90,  45, 109,  10, 90},    // Player 3: (LIFE X, LIFE Y, POISON X, POISON Y, TURN X, TURN Y)
+    {198, 90, 203, 109, 168, 90}    // Player 4: (LIFE X, LIFE Y, POISON X, POISON Y, TURN X, TURN Y)
 };
 
 DisplayManager::DisplayManager() {}
@@ -84,8 +84,8 @@ void DisplayManager::drawTurnMarker(int x, int y) {
     lastY = y;
     lastState = toggle;
 
-    x = std::max(5, std::min(x, EPD_2IN9_V2_WIDTH - 5));
-    y = std::max(5, std::min(y, EPD_2IN9_V2_HEIGHT - 5));
+    x = std::max(5, std::min(x, EPD_2IN9_V2_HEIGHT - 5));
+    y = std::max(5, std::min(y, EPD_2IN9_V2_WIDTH - 5));
     if (toggle) {
         Paint_DrawCircle(x, y, 5, BLACK, DOT_PIXEL_1X1, DRAW_FILL_FULL);
     } else {
@@ -96,13 +96,26 @@ void DisplayManager::drawTurnMarker(int x, int y) {
     EPD_2IN9_V2_Display(frameBuffer);
 }
 
+/**
+ * Clears the turn marker at the specified (x, y) by drawing a white-filled circle.
+ */
+void DisplayManager::clearTurnMarker(int x, int y) {
+    Paint_DrawCircle(x, y, 5, WHITE, DOT_PIXEL_1X1, DRAW_FILL_FULL);
+    EPD_2IN9_V2_Display_Partial(frameBuffer);
+}
+
 // Updates the turn indicator for the specified player.
-// If isTurn is true, activates the blinking turn marker.
+// Temporarily disabled: logic is commented out for future reactivation.
 void DisplayManager::updateTurnIndicator(uint8_t playerId, bool isTurn) {
-    if (playerId >= 4) return;
-    const auto& region = PLAYER_LAYOUT[playerId];
-    if (isTurn) toggle = true;
-    drawTurnMarker(region.turnX, region.turnY);
+    // Turn marker display is temporarily disabled.
+    // if (playerId >= 4) return;
+    // const auto& region = PLAYER_LAYOUT[playerId];
+    // if (isTurn) {
+    //     toggle = true;
+    //     drawTurnMarker(region.turnX, region.turnY);
+    // } else {
+    //     clearTurnMarker(region.turnX, region.turnY);
+    // }
 }
 
 // Renders the life total for the specified player in their assigned screen region.
@@ -132,7 +145,7 @@ void DisplayManager::drawLife(uint8_t playerId, int life) {
     Paint_ClearWindows(x, y, x2, y2, WHITE);
     Paint_DrawString_EN(x, y, str, &Font12, WHITE, BLACK);
     Serial.printf("[Display] Drawing life for P%d: %s\n", playerId + 1, str);
-    EPD_2IN9_V2_Display(frameBuffer);
+    EPD_2IN9_V2_Display_Partial(frameBuffer);
 }
 
 // Renders the poison counter for the specified player in their assigned screen region.
@@ -154,7 +167,7 @@ void DisplayManager::drawPoison(uint8_t playerId, int poison) {
     Paint_ClearWindows(x, y, x2, y2, WHITE);
     Paint_DrawString_EN(x, y, buf, &Font12, WHITE, BLACK);
     Serial.printf("[Display] Drawing poison for P%d: %s\n", playerId + 1, buf);
-    EPD_2IN9_V2_Display(frameBuffer);
+    EPD_2IN9_V2_Display_Partial(frameBuffer);
 }
 
 /**
@@ -163,12 +176,6 @@ void DisplayManager::drawPoison(uint8_t playerId, int poison) {
  */
 void DisplayManager::renderPlayerState(uint8_t playerId, const PlayerState& state) {
     if (playerId >= 4) return;
-
-    static unsigned long lastUpdateTime[4] = {0, 0, 0, 0};
-
-    unsigned long now = millis();
-    if (now - lastUpdateTime[playerId] < 1000) return;  // Skip update if less than 1000ms since last for this player
-    lastUpdateTime[playerId] = now;
 
     Serial.printf("[Display] Rendering state for P%d — Life: %d, Poison: %d, Turn: %d\n",
                   playerId + 1,
@@ -193,8 +200,8 @@ void DisplayManager::renderPlayerState(uint8_t playerId, const PlayerState& stat
     }
 
     if (cachedTurn[playerId] != state.isTurn) {
-        cachedTurn[playerId] = state.isTurn;
         updateTurnIndicator(playerId, state.isTurn);
+        cachedTurn[playerId] = state.isTurn;
     }
 }
 

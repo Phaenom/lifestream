@@ -23,15 +23,18 @@ public:
     void begin();                                      // Initialize display system
     void renderPlayerState(uint8_t playerId, const PlayerState& state); // Draw full info for one player
     void renderAllPlayerStates(const class GameState& state);  // Render all players' states
+    UBYTE* frameBuffer = nullptr;                      // Display buffer
+
 
 private:
     void drawLife(uint8_t playerId, int life);         // Render life total or "ELIMINATED"
     void drawPoison(uint8_t playerId, int poison);     // Render poison counter
     void updateTurnIndicator(uint8_t playerId, bool isTurn); // Draw blinking turn indicator
     void drawTurnMarker(int x, int y);                 // Render blinking circle
+    void clearTurnMarker(int x, int y);                 // Erase the turn marker
 
     bool toggle = false;                               // Blink state toggle
-    UBYTE* frameBuffer = nullptr;                      // Display buffer
+    //UBYTE* frameBuffer = nullptr;                      // Display buffer
 
     UBYTE *BlackImage; // Buffer for display image
 

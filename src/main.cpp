@@ -52,6 +52,7 @@ void setup() {
       display.renderPlayerState(id, gameState.getPlayerState(id));
       Serial.printf("[Render] Drawing player %d\n", id);
     }
+    EPD_2IN9_V2_Display(display.frameBuffer);
   } else {
     // Wait for host to send game parameters
     while (!network.hasReceivedGameParams()) {
@@ -63,6 +64,7 @@ void setup() {
       display.renderPlayerState(id, gameState.getPlayerState(id));
       Serial.printf("[Render] Drawing player %d\n", id);
     }
+    EPD_2IN9_V2_Display(display.frameBuffer);
   }
 }
 
