@@ -5,6 +5,8 @@
 #include <Arduino.h>
 #include "InputManager.h"
 
+//InputManager input;
+
 // Pin connected to rotary encoder output A
 const int ENCODER_PIN_A = 34;
 // Pin connected to rotary encoder output B

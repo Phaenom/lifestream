@@ -1,6 +1,8 @@
 #include "GameSetup.h"
 #include <Arduino.h>
 
+GameSetup gameSetup;
+
 void GameSetup::begin() {
     Serial.println("\n[Init] GameSetup initialized.");
 

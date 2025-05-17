@@ -42,4 +42,6 @@ private:
     void drawLogo(int x, int y);
 };
 
+extern DisplayManager display; // External declaration of DisplayManager instance
+
 #endif // DISPLAY_MANAGER_H

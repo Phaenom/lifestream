@@ -2,8 +2,7 @@
 #include "GameSetup.h"
 #include "NetworkManager.h"
 
-extern DisplayManager display;
-extern NetworkManager network;
+GameState gameState;
 
 void GameState::begin(int id, int life) {
     Serial.println("[GameSetup] Host beginning game setup...");

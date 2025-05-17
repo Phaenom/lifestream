@@ -21,4 +21,6 @@ private:
     unsigned long lastUpdateTime = 0;
 };
 
+extern DeviceManager device; // External declaration of DeviceManager instance
+
 #endif // DEVICEMANAGER_H

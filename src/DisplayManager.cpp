@@ -6,6 +6,8 @@
 #include "DisplayManager.h"
 #include "Config.h"
 
+DisplayManager display;
+
 // Defines screen regions for each player's life, poison, and turn marker display.
 struct PlayerDisplayRegion {
     int lifeX, lifeY;

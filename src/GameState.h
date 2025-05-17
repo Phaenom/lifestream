@@ -29,4 +29,6 @@ private:
     void checkElimination();     // Local only
 };
 
+extern GameState gameState; // External declaration of GameState instance
+
 #endif

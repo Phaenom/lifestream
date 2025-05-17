@@ -46,4 +46,6 @@ private:
     mutable bool longPressDetected = false;   // Flag set when a long press is detected
 };
 
+//extern InputManager input;
+
 #endif

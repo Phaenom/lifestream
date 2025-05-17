@@ -1,11 +1,8 @@
-#ifdef SIMULATION_MODE
-#warning SIMULATION_MODE is enabled
-#endif
-
 // Main entry point for LifeStream, responsible for initializing system modules and running the main loop.
 #include "Config.h"
 
 #ifdef SIMULATION_MODE
+#warning SIMULATION_MODE is enabled
 #include "testing/SimulationInputManager.h"
 SimulationInputManager simInput;
 IInputManager* input = &simInput;
@@ -15,13 +12,6 @@ InputManager hwInput;
 IInputManager* input = &hwInput;
 #endif
 
-DisplayManager display;        // Manages display output
-//BatteryManager battery;        // Handles battery monitoring
-DeviceManager device;          // Manages device-specific functions
-//EEPROMManager eeprom;          // Manages EEPROM storage
-//NetworkManager network;        // Handles network connectivity
-GameSetup gameSetup;           // Manages game setup procedures
-GameState gameState;           // Maintains current gameState state
 
 void setup() {
   delay(2000);

@@ -11,6 +11,4 @@
 #include "Utils.h"
 #include "IInputManager.h"        // Interface for input management
 
-// #define SIMULATION_MODE  // Uncomment to enable serial-based simulation mode
-
 #endif

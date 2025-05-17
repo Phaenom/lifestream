@@ -8,4 +8,6 @@ public:
     void begin();  // Initialize module
 };
 
+extern EEPROMManager eeprom; // External declaration of EEPROMManager instance
+
 #endif // EEPROMMANAGER_H
