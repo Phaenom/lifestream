@@ -83,7 +83,7 @@ void GameState::nextTurn() {
     currentTurnPlayer = (currentTurnPlayer + 1) % playerCount;
     players[currentTurnPlayer].isTurn = true;
     display.renderPlayerState(currentTurnPlayer, players[currentTurnPlayer]);
-    network.sendGameState(currentTurnPlayer, players[currentTurnPlayer]);
+    //network.sendGameState(currentTurnPlayer, players[currentTurnPlayer]);
     Serial.printf("[GameState] Turn passed from Player %d to Player %d\n", 
                   (currentTurnPlayer + playerCount - 1) % playerCount, currentTurnPlayer);
 }

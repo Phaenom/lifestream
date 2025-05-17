@@ -25,24 +25,25 @@ GameSetup gameSetup;           // Manages game setup procedures
 GameState gameState;           // Maintains current gameState state
 
 void setup() {
-  Serial.println("[Main] Setup starting...");
+  delay(2000);
   Serial.begin(115200);
-
-  display.begin();    // Initialize e-paper display
-  Serial.println("[Main] Display initialized");
-
-  input->begin();     // Initialize input system
-  Serial.println("[Main] Input system initialized");
+  Serial.println("\n[Main] Setup starting...\n");
 
   network.begin();    // Initialize network system
-  Serial.println("[Main] Network initialized");
+  Serial.println("\n[Main] Network initialized");
+
+  display.begin();    // Initialize e-paper display
+  Serial.println("\n[Main] Display initialized");
+
+  input->begin();     // Initialize input system
+  Serial.println("\n[Main] Input system initialized");
 
   // Assume host until setup packet is received
-  device.assumeHostRole();
+  //device.assumeHostRole();
 
   gameSetup.begin();
 
-  if (!device.isHost()) {
+/*   if (!device.isHost()) {
     network.sendJoinRequest();
   }
 
@@ -53,7 +54,7 @@ void setup() {
 
   while (!network.hasReceivedGameParams()) {
     delay(100);
-  }
+  } */
 
   Serial.println("[Main] Setup received from host");
   gameState.begin(device.getPlayerId(), gameSetup.getStartingLife());
@@ -75,27 +76,28 @@ void loop() {
     lastHeartbeat = millis();
     }
 
+  network.update();
   input->update();             // Poll and update input state
 
-  if (input->getRotation() != 0) {
-    Serial.print("Rotated: ");
-    Serial.println(input->getRotation());    // Log rotation input
-    Serial.print("[Loop] getRotation: ");
-    Serial.println(input->getRotation());
-  }
+  // if (input->getRotation() != 0) {
+  //   Serial.print("Rotated: ");
+  //   Serial.println(input->getRotation());    // Log rotation input
+  //   Serial.print("[Loop] getRotation: ");
+  //   Serial.println(input->getRotation());
+  // }
 
-  if (input->wasButtonShortPressed()) {
-    Serial.println("Short press detected");  // Handle short button press action
-    Serial.printf("[Input] Rotation delta: %d\n", input->getRotation());
-  }
+  // if (input->wasButtonShortPressed()) {
+  //   Serial.println("Short press detected");  // Handle short button press action
+  //   Serial.printf("[Input] Rotation delta: %d\n", input->getRotation());
+  // }
 
-  if (input->wasButtonLongPressed()) {
-    Serial.println("Long press detected");
-    Serial.printf("[Input] Rotation delta: %d\n", input->getRotation());
-    if (gameState.getPlayerState(device.getPlayerId()).isTurn) {
-      network.sendTurnAdvanceRequest(device.getPlayerId());
-    }
-  }
+  // if (input->wasButtonLongPressed()) {
+  //   Serial.println("Long press detected");
+  //   Serial.printf("[Input] Rotation delta: %d\n", input->getRotation());
+  //   if (gameState.getPlayerState(device.getPlayerId()).isTurn) {
+  //     network.sendTurnAdvanceRequest(device.getPlayerId());
+  //   }
+  // }
 
   delay(10);                   // Small delay to debounce inputs and reduce CPU usage
 }

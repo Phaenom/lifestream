@@ -1,4 +1,181 @@
 #include "NetworkManager.h"
+
+// Global broadcast address used to send ESP-NOW packets to all nearby devices.
+uint8_t broadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}; // Broadcast address for ESP-NOW
+
+// Low-level ESP-NOW initialization
+void NetworkManager::setupESPNow() {
+    if (esp_now_init() != ESP_OK) {
+        Serial.println("ESP-NOW Initialization Failed");
+        ESP.restart();  // Reset device on failure to recover cleanly
+    }
+}
+
+// ESP-NOW receive callback using the modern ESP-IDF-style API.
+// When data is received, it forwards it to the network's onReceive handler.
+void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
+    extern NetworkManager network;
+    network.onDataReceive(mac, incomingData, len);
+}
+
+// Initializes WiFi and ESP-NOW, and begins host discovery window.
+void NetworkManager::begin() {
+    WiFi.mode(WIFI_STA);  // ESP-NOW only works in station (STA) mode
+    setupESPNow();        // Initialize ESP-NOW layer
+    Serial.println("Searching for Host...");
+    esp_now_register_recv_cb(OnDataRecv); // Set up callback to receive packets
+    discoveryStartTime = millis();        // Start a timer for host discovery timeout
+}
+
+// Main loop to manage network state.
+// If role is not yet determined, check for host presence within a timeout.
+// If host, send game state and announcements at regular intervals.
+void NetworkManager::update() {
+    if (role == ROLE_UNDEFINED) {
+        // If host not detected within 5 seconds, become the host.
+        if (millis() - discoveryStartTime > 5000) {
+            if (hostDetected) {
+                startAsClient();  // A host exists — become a client
+            } else {
+                startAsHost();    // No host found — promote self to host
+            }
+        }
+        Serial.print("Host Detected? ");
+        Serial.println(hostDetected);
+    }
+
+    // Host responsibilities: broadcast presence and sync game state
+    if (role == ROLE_HOST) {
+        static unsigned long lastAnnounce = 0;
+        if (millis() - lastAnnounce > 1000) {
+            HostAnnounce announce = {MSG_TYPE_HOST_ANNOUNCE};
+            esp_now_send(broadcastAddress, (uint8_t *)&announce, sizeof(announce));
+            sendGameState();
+            lastAnnounce = millis();
+        }
+    }
+}
+
+// Promote device to Host role.
+// Assign self Player ID 0 and add a broadcast peer for ESP-NOW sends.
+void NetworkManager::startAsHost() {
+    Serial.println("Becoming HOST");
+    role = ROLE_HOST;
+    myPlayerID = 0; // Convention: host is always Player 0
+
+    esp_now_peer_info_t peerInfo = {};
+    memcpy(peerInfo.peer_addr, broadcastAddress, 6);
+    peerInfo.channel = 0;
+    peerInfo.encrypt = false;
+
+    if (esp_now_add_peer(&peerInfo) != ESP_OK) {
+        Serial.println("Failed to add broadcast peer");
+    }
+}
+
+// Promote device to Client role.
+// For now, assigns a static Player ID of 1 (should eventually be dynamic).
+void NetworkManager::startAsClient() {
+    Serial.println("Becoming CLIENT");
+    role = ROLE_CLIENT;
+    myPlayerID = 1;
+}
+
+// Host-only: Broadcast full game state to all clients.
+void NetworkManager::sendGameState() {
+    if (role == ROLE_HOST) {
+        GameData data = {
+            MSG_TYPE_GAME_STATE,
+            playerCount,
+            currentTurn,
+            {lifeTotals[0], lifeTotals[1], lifeTotals[2], lifeTotals[3]},
+            myPlayerID
+        };
+        esp_now_send(broadcastAddress, (uint8_t *)&data, sizeof(data));
+    }
+}
+
+// Client-only: Send new life total to host.
+void NetworkManager::sendLifeUpdate(uint8_t life) {
+    if (role == ROLE_CLIENT) {
+        LifeChange change = {MSG_TYPE_LIFE_CHANGE, myPlayerID, life};
+        esp_now_send(broadcastAddress, (uint8_t *)&change, sizeof(change));
+    }
+}
+
+// Client-only: Send a request to pass the turn to the next player.
+void NetworkManager::sendTurnChange() {
+    if (role == ROLE_CLIENT) {
+        TurnChange change = {MSG_TYPE_TURN_CHANGE, myPlayerID};
+        esp_now_send(broadcastAddress, (uint8_t *)&change, sizeof(change));
+    }
+}
+
+// Called whenever a message is received over ESP-NOW.
+// Determines message type and takes appropriate action based on current role.
+void NetworkManager::onDataReceive(const uint8_t *mac, const uint8_t *incomingData, int len) {
+    if (len < 1) return;
+    uint8_t messageType = incomingData[0];
+
+    switch (messageType) {
+        case MSG_TYPE_HOST_ANNOUNCE:
+            // Used during discovery: confirms a host is active
+            hostDetected = true;
+            if (role == ROLE_UNDEFINED) {
+                Serial.println("Host Announce Received!");
+            }
+            break;
+
+        case MSG_TYPE_GAME_STATE:
+            // Client receives game state from host and updates local data
+            if (role == ROLE_CLIENT && len == sizeof(GameData)) {
+                GameData *data = (GameData *)incomingData;
+                playerCount = data->playerCount;
+                currentTurn = data->currentTurn;
+                for (int i = 0; i < 4; i++) {
+                    lifeTotals[i] = data->lifeTotal[i];
+                }
+            }
+            break;
+
+        case MSG_TYPE_LIFE_CHANGE:
+            // Host receives a life total update from a client
+            if (role == ROLE_HOST && len == sizeof(LifeChange)) {
+                LifeChange *change = (LifeChange *)incomingData;
+                lifeTotals[change->senderID] = change->newLifeTotal;
+                sendGameState(); // Sync updated state with all clients
+            }
+            break;
+
+        case MSG_TYPE_TURN_CHANGE:
+            // Host receives a turn-change request and advances the turn
+            if (role == ROLE_HOST && len == sizeof(TurnChange)) {
+                currentTurn = (currentTurn + 1) % playerCount;
+                sendGameState();
+            }
+            break;
+    }
+}
+
+// Return the current device role (host, client, or undefined)
+DeviceRole NetworkManager::getRole() {
+    return role;
+}
+
+// Return the current player ID assigned to this device
+uint8_t NetworkManager::getPlayerID() {
+    return myPlayerID;
+}
+
+
+// =================================================================================
+//
+// NETWORK MANAGER IMPLEMENTATION
+//      SECONDARY VERSION (NOT WORKING) LEFT FOR REFERENCE
+//
+// =================================================================================
+
+/* #include "NetworkManager.h"
 #include "GameSetup.h"
 #include "GameState.h"
 #include "DeviceManager.h"
@@ -175,3 +352,4 @@ void NetworkManager::sendGameSetupTo(const uint8_t* dest, uint8_t playerCount, u
     esp_err_t result = esp_now_send(dest, (uint8_t*)&packet, sizeof(packet));
     Serial.printf("[NetworkManager] sendGameSetupTo result: %d\n", result);
 }
+ */
