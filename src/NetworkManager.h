@@ -87,6 +87,8 @@ public:
     uint8_t lifeTotals[4] = {20, 20, 20, 20};
     DeviceRole role = ROLE_UNDEFINED;       // Current device role
     static const char* roleToString(DeviceRole role);
+    void heartbeat();  // Called regularly in loop()
+    const uint8_t* getHostMAC() const;
 
 private:
     uint8_t myPlayerID = 0;                 // Device's assigned player ID
@@ -97,6 +99,7 @@ private:
 
     bool hostDetected = false;              // Flag to indicate if Host was detected during discovery
     unsigned long discoveryStartTime = 0;   // Time when discovery started
+    uint8_t hostMac[6] = {0};  // Store the MAC of the detected host
 };
 
 extern NetworkManager network;  // <-- external declaration

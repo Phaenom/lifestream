@@ -13,7 +13,9 @@ IInputManager* input = &hwInput;
 #endif
 
 void setup() {
-  delay(50);  // Allow time for serial monitor to connect
+  unsigned long delayTime = random(1000, 3000); // 1 to 3 seconds
+  delay(delayTime);
+
   Serial.begin(115200);
   Serial.println("\n[Main] Setup starting...");
 
@@ -49,18 +51,9 @@ void setup() {
 }
 
 void loop() {
-  // Heartbeat - Used for debugging to ensure loop is active
-  static unsigned long lastHeartbeat = 0;
-    if (millis() - lastHeartbeat > 5000) {
-    Serial.println("");
-      Serial.printf("[Loop] Heartbeat - Player ID: %d, Role: %s\n",
-              device.getPlayerId(),
-              NetworkManager::roleToString(network.getRole()));
-    Serial.println("");
-    lastHeartbeat = millis();
-    }
+  input->update();            // Poll and update input state
 
-  input->update();             // Poll and update input state
+  network.heartbeat();        // broadcast host presence if applicable
 
   if (input->getRotation() != 0) {
     Serial.print("Rotated: ");

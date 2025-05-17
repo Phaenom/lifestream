@@ -32,28 +32,14 @@ void NetworkManager::begin() {
 // If role is not yet determined, check for host presence within a timeout.
 // If host, send game state and announcements at regular intervals.
 void NetworkManager::updateRole() {
-    if (role == ROLE_UNDEFINED) {
-        // If host not detected within 5 seconds, become the host.
-        if (millis() - discoveryStartTime > 5000) {
-            Serial.print("\nHost Detected? ");
-            if (hostDetected) {
-                becomeClient();  // A host exists — become a client
-                Serial.println(hostDetected);
-            } else {
-                becomeHost();    // No host found — promote self to host
-            }
-        }
-    }
+    if (role != ROLE_UNDEFINED) return;  // Role already assigned
 
-    // Host responsibilities: broadcast presence and sync game state
-    if (role == ROLE_HOST) {
-        static unsigned long lastAnnounce = 0;
-        if (millis() - lastAnnounce > 1000) {
-            HostAnnounce announce = {MSG_TYPE_HOST_ANNOUNCE};
-            esp_now_send(broadcastAddress, (uint8_t *)&announce, sizeof(announce));
-            sendGameState();
-            lastAnnounce = millis();
-        }
+    // Wait a few seconds for host announcements
+    unsigned long now = millis();
+    if (!hostDetected && now - discoveryStartTime > 5000) {
+        becomeHost();
+    } else if (hostDetected && now - discoveryStartTime > 1000) {
+        becomeClient();
     }
 }
 
@@ -120,11 +106,13 @@ void NetworkManager::onDataReceive(const uint8_t *mac, const uint8_t *incomingDa
 
     switch (messageType) {
         case MSG_TYPE_HOST_ANNOUNCE:
-            // Used during discovery: confirms a host is active
-            hostDetected = true;
             if (role == ROLE_UNDEFINED) {
-                Serial.println("Host Announce Received!");
+                Serial.println("[Network] Host Announce Received!");
             }
+            hostDetected = true;
+
+            memcpy(hostMac, mac, 6);    // Store the host MAC
+
             break;
 
         case MSG_TYPE_GAME_STATE:
@@ -176,6 +164,50 @@ const char* NetworkManager::roleToString(DeviceRole role) {
         default: return "🚫 Unknown";
     }
 }
+
+void NetworkManager::heartbeat() {
+    static unsigned long lastAnnounce = 0;
+    static unsigned long lastHeartbeat = 0;
+    unsigned long now = millis();
+
+    // Host-only: broadcast presence every second
+    if (role == ROLE_HOST && now - lastAnnounce > 1000) {
+        HostAnnounce announce = { MSG_TYPE_HOST_ANNOUNCE };
+        esp_now_send(broadcastAddress, (uint8_t*)&announce, sizeof(announce));
+        lastAnnounce = now;
+    }
+
+    // All devices: print heartbeat info every 5 seconds
+    if (now - lastHeartbeat > 5000) {
+        uint8_t localMac[6];
+        esp_read_mac(localMac, ESP_MAC_WIFI_STA);
+
+        Serial.println("\n[Loop] Network Heartbeat");
+        Serial.printf(" - Player ID : %d\n", getPlayerID());
+        Serial.printf(" - Role      : %s\n", roleToString(getRole()));
+        Serial.printf(" - MAC Addr  : %02X:%02X:%02X:%02X:%02X:%02X\n",
+                      localMac[0], localMac[1], localMac[2],
+                      localMac[3], localMac[4], localMac[5]);
+
+        esp_now_peer_num_t peerCount;
+        esp_now_get_peer_num(&peerCount);
+        Serial.printf(" - ESP-NOW Peers: %d\n", peerCount.total_num);
+
+        if (role == ROLE_CLIENT && hostMac[0] != 0) {
+            Serial.printf(" - Host MAC  : %02X:%02X:%02X:%02X:%02X:%02X\n",
+                          hostMac[0], hostMac[1], hostMac[2],
+                          hostMac[3], hostMac[4], hostMac[5]);
+        }
+
+        lastHeartbeat = now;
+    }
+}
+
+const uint8_t* NetworkManager::getHostMAC() const {
+    return (role == ROLE_CLIENT) ? hostMac : nullptr;
+}
+
+
 
 // =================================================================================
 //
