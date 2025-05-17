@@ -1,5 +1,7 @@
 #include "NetworkManager.h"
 
+NetworkManager network;
+
 // Global broadcast address used to send ESP-NOW packets to all nearby devices.
 uint8_t broadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}; // Broadcast address for ESP-NOW
 

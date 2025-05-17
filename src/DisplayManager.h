@@ -24,7 +24,7 @@ public:
     void renderPlayerState(uint8_t playerId, const PlayerState& state); // Draw full info for one player
     void renderAllPlayerStates(const class GameState& state);  // Render all players' states
     UBYTE* frameBuffer = nullptr;                      // Display buffer
-
+    void drawDeviceRole();
 
 private:
     void drawLife(uint8_t playerId, int life);         // Render life total or "ELIMINATED"

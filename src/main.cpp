@@ -4,7 +4,6 @@
 
 // Main entry point for LifeStream, responsible for initializing system modules and running the main loop.
 #include "Config.h"
-#include "IInputManager.h"        // Interface for input management
 
 #ifdef SIMULATION_MODE
 #include "testing/SimulationInputManager.h"
@@ -17,10 +16,10 @@ IInputManager* input = &hwInput;
 #endif
 
 DisplayManager display;        // Manages display output
-BatteryManager battery;        // Handles battery monitoring
+//BatteryManager battery;        // Handles battery monitoring
 DeviceManager device;          // Manages device-specific functions
-EEPROMManager eeprom;          // Manages EEPROM storage
-NetworkManager network;        // Handles network connectivity
+//EEPROMManager eeprom;          // Manages EEPROM storage
+//NetworkManager network;        // Handles network connectivity
 GameSetup gameSetup;           // Manages game setup procedures
 GameState gameState;           // Maintains current gameState state
 
@@ -43,18 +42,10 @@ void setup() {
 
   gameSetup.begin();
 
-/*   if (!device.isHost()) {
-    network.sendJoinRequest();
-  }
-
-  network.sendGameSetup(gameSetup.getPlayerCount(), gameSetup.getStartingLife());
+  network.sendGameState();
 
   delay(500);                  // Prepare game setup environment
   Serial.println("[Main] Game setup environment prepared");
-
-  while (!network.hasReceivedGameParams()) {
-    delay(100);
-  } */
 
   Serial.println("[Main] Setup received from host");
   gameState.begin(device.getPlayerId(), gameSetup.getStartingLife());
@@ -72,7 +63,7 @@ void loop() {
   // Heartbeat - Used for debugging to ensure loop is active
   static unsigned long lastHeartbeat = 0;
     if (millis() - lastHeartbeat > 30000) {
-    Serial.printf("[Loop] Heartbeat - Player ID: %d, Is Host: %d\n", device.getPlayerId(), device.isHost());
+    Serial.printf("[Loop] Heartbeat - Player ID: %d, Is Host: %s\n", device.getPlayerId(), network.getRole());
     lastHeartbeat = millis();
     }
 

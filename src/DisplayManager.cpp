@@ -6,7 +6,6 @@
 #include "DisplayManager.h"
 #include "Config.h"
 
-
 // Defines screen regions for each player's life, poison, and turn marker display.
 struct PlayerDisplayRegion {
     int lifeX, lifeY;
@@ -223,4 +222,30 @@ void DisplayManager::drawLogo(int x, int y) {
             }
         }
     }
+}
+
+void DisplayManager::drawDeviceRole() {
+    const char* roleText = "";
+    switch (network.getRole()) {
+        case ROLE_HOST:
+            roleText = "HOST";
+            break;
+        case ROLE_CLIENT:
+            roleText = "CLIENT";
+            break;
+        default:
+            roleText = "UNASSIGNED";
+            break;
+    }
+
+    // Account for 270° screen rotation (296 x 128 screen)
+    int textLength = strlen(roleText);
+    int textWidth = textLength * 6;       // Adjust if your font differs
+    int screenWidth = 296;
+    int screenHeight = 128;
+
+    int x = (screenWidth - textWidth) / 2;  // Centered horizontally
+    int y = screenHeight - 12;              // 12px font height → y = 116
+
+    Paint_DrawString_EN(x, y, roleText, &Font12, BLACK, WHITE);
 }

@@ -85,9 +85,9 @@ public:
     uint8_t playerCount = 4;
     uint8_t currentTurn = 0;
     uint8_t lifeTotals[4] = {20, 20, 20, 20};
+    DeviceRole role = ROLE_UNDEFINED;       // Current device role
 
 private:
-    DeviceRole role = ROLE_UNDEFINED;       // Current device role
     uint8_t myPlayerID = 0;                 // Device's assigned player ID
 
     void setupESPNow();                     // Initialize ESP-NOW
@@ -97,6 +97,8 @@ private:
     bool hostDetected = false;              // Flag to indicate if Host was detected during discovery
     unsigned long discoveryStartTime = 0;   // Time when discovery started
 };
+
+extern NetworkManager network;  // <-- external declaration
 
 #endif
 
