@@ -112,6 +112,26 @@ long InputManager::update_encoder() {
 // 	return encoder.getCount()/2; // return encoder count divided by 2
 // }
 
+bool InputManager::get_encoder_button() {
+	// updates button state
+	encoder_button.loop();
+	// isPressed = false; 
+	// if (encoder_button.isPressed()) isPressed = true;  // released or pressed?
+	// return isPressed;
+	isReleased = false;
+	if (encoder_button.isReleased()) isReleased = true;  // released or pressed?
+	return isReleased;
+}
+
+bool InputManager::get_arcade_button() {
+	led_button.loop();
+	// isPressed = false;
+	// if (led_button.isPressed()) isPressed = true; // released or pressed?
+	// return isPressed;
+	isReleased = false;
+	if (led_button.isReleased()) isReleased = true; // released or pressed?
+	return isReleased;
+}
 
 bool InputManager::update_button() {
 	// Check if the button is pressed 

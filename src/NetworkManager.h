@@ -64,6 +64,9 @@ public:
     uint8_t currentTurn = 0;
     uint8_t lifeTotals[4] = {20, 20, 20, 20};
 
+    uint8_t modeMax = 2;
+    uint8_t poisonTotals[4] = {0, 0, 0, 0};
+
 private:
     DeviceRole role = ROLE_UNDEFINED;  // Current device role
     uint8_t myPlayerID = 0;            // Device's assigned player ID

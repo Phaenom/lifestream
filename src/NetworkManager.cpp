@@ -91,6 +91,12 @@ void NetworkArbiter::sendLifeUpdate(uint8_t life) {
         LifeChange change = {MSG_TYPE_LIFE_CHANGE, myPlayerID, life};
         esp_now_send(broadcastAddress, (uint8_t *)&change, sizeof(change));
     }
+
+    // host *should* be able to upate game state directly
+    if (role == ROLE_HOST) {
+        lifeTotals[myPlayerID] = life;
+        sendGameState();
+    }
 }
 
 // Client requests to pass turn
@@ -98,6 +104,11 @@ void NetworkArbiter::sendTurnChange() {
     if (role == ROLE_CLIENT) {
         TurnChange change = {MSG_TYPE_TURN_CHANGE, myPlayerID};
         esp_now_send(broadcastAddress, (uint8_t *)&change, sizeof(change));
+    }
+
+    // host *should* be able to upate game state directly
+    if (role == ROLE_HOST) {
+        currentTurn = (currentTurn + 1) % playerCount;
     }
 }
 
@@ -109,7 +120,7 @@ void NetworkArbiter::onReceive(const uint8_t *mac, const uint8_t *incomingData, 
     switch (messageType) {
         case MSG_TYPE_HOST_ANNOUNCE:
             hostDetected = true;
-            Serial.println("Host Announce Received!");
+            //Serial.println("Host Announce Received!");
             break;
 
         case MSG_TYPE_GAME_STATE:
@@ -133,6 +144,8 @@ void NetworkArbiter::onReceive(const uint8_t *mac, const uint8_t *incomingData, 
 
         case MSG_TYPE_TURN_CHANGE:
             if (role == ROLE_HOST && len == sizeof(TurnChange)) {
+                Serial.println("Network: Turn Change Sent!");
+
                 currentTurn = (currentTurn + 1) % playerCount;
                 sendGameState();
             }

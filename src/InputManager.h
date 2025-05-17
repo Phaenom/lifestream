@@ -35,7 +35,7 @@ public:
 	
 	// ENCODER BUTTON STUFF
 	ezButton encoder_button;
-	int mode;	
+	int mode; // game manager / network manager handles?
 
 	// LED BUTTON STUFF
 	//Button led_button;
@@ -43,10 +43,9 @@ public:
 
 	bool isPressed;
 	bool isReleased;
-	bool isLongPress;
+	bool isLongPress; // what to use this for?
 	long pressTime;
 	long pressDuration;
-
 
     // Setup hardware for inputs
     void begin();//(int DT, int CLK);
@@ -54,6 +53,8 @@ public:
     // Update function to read inputs each loop
     long update_encoder();
 	bool update_button();
+	bool get_encoder_button(); // rename button names?
+	bool get_arcade_button();
 	void set_mode();
 	void reset();
 

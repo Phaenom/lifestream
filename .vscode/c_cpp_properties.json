@@ -9,6 +9,7 @@
             "name": "PlatformIO",
             "includePath": [
                 "c:/Users/legor/Documents/GitHub/lifestream/src",
+                "C:/Users/legor/.platformio/packages/framework-arduinoespressif32/libraries/WiFi/src",
                 "c:/Users/legor/Documents/GitHub/lifestream/.pio/libdeps/esp32dev/ezButton/src",
                 "c:/Users/legor/Documents/GitHub/lifestream/.pio/libdeps/esp32dev/ESP32_Button/src",
                 "c:/Users/legor/Documents/GitHub/lifestream/.pio/libdeps/esp32dev/ESP32Encoder/src",
@@ -241,7 +242,6 @@
                 "C:/Users/legor/.platformio/packages/framework-arduinoespressif32/libraries/USB/src",
                 "C:/Users/legor/.platformio/packages/framework-arduinoespressif32/libraries/Update/src",
                 "C:/Users/legor/.platformio/packages/framework-arduinoespressif32/libraries/WebServer/src",
-                "C:/Users/legor/.platformio/packages/framework-arduinoespressif32/libraries/WiFi/src",
                 "C:/Users/legor/.platformio/packages/framework-arduinoespressif32/libraries/WiFiClientSecure/src",
                 "C:/Users/legor/.platformio/packages/framework-arduinoespressif32/libraries/WiFiProv/src",
                 ""
@@ -250,6 +250,7 @@
                 "limitSymbolsToIncludedHeaders": true,
                 "path": [
                     "c:/Users/legor/Documents/GitHub/lifestream/src",
+                    "C:/Users/legor/.platformio/packages/framework-arduinoespressif32/libraries/WiFi/src",
                     "c:/Users/legor/Documents/GitHub/lifestream/.pio/libdeps/esp32dev/ezButton/src",
                     "c:/Users/legor/Documents/GitHub/lifestream/.pio/libdeps/esp32dev/ESP32_Button/src",
                     "c:/Users/legor/Documents/GitHub/lifestream/.pio/libdeps/esp32dev/ESP32Encoder/src",
@@ -482,7 +483,6 @@
                     "C:/Users/legor/.platformio/packages/framework-arduinoespressif32/libraries/USB/src",
                     "C:/Users/legor/.platformio/packages/framework-arduinoespressif32/libraries/Update/src",
                     "C:/Users/legor/.platformio/packages/framework-arduinoespressif32/libraries/WebServer/src",
-                    "C:/Users/legor/.platformio/packages/framework-arduinoespressif32/libraries/WiFi/src",
                     "C:/Users/legor/.platformio/packages/framework-arduinoespressif32/libraries/WiFiClientSecure/src",
                     "C:/Users/legor/.platformio/packages/framework-arduinoespressif32/libraries/WiFiProv/src",
                     ""

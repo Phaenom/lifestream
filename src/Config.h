@@ -13,7 +13,9 @@
 #define EPD_DT 26 // rotary encoder
 //#define EPD_CLK 13 // rotary encoder
 #define EPD_CLK 17 // rotary encoder
-#define EPD_BUTTON_ENCODER 27 // encoder button
+
+// #define EPD_BUTTON_ENCODER 27 // encoder button
+#define EPD_BUTTON_ENCODER 21 // encoder button
 
 #define EPD_BUZZ 18 // piezo buzzer
 
