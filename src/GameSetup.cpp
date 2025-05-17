@@ -9,6 +9,7 @@ void GameSetup::begin() {
     // TODO: Replace with interactive setup using Display + Input
     startingLife = 20;
     playerCount = 4;
+    Serial.println("");
     Serial.printf("[GameSetup] Default setup — Players: %d, Starting Life: %d\n", playerCount, startingLife);
     configured = true;  // Simulate configuration for testing
 }

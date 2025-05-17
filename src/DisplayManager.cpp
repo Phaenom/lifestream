@@ -141,7 +141,7 @@ void DisplayManager::drawLife(uint8_t playerId, int life) {
     int y2 = std::min(y + 20, EPD_2IN9_V2_HEIGHT);
     Paint_ClearWindows(x, y, x2, y2, WHITE);
     Paint_DrawString_EN(x, y, str, &Font12, WHITE, BLACK);
-    Serial.printf("[Display] Drawing life for P%d: %s\n", playerId + 1, str);
+    //Serial.printf("[Display] Drawing life for P%d: %s\n", playerId + 1, str);
     EPD_2IN9_V2_Display_Partial(frameBuffer);
 }
 
@@ -163,7 +163,7 @@ void DisplayManager::drawPoison(uint8_t playerId, int poison) {
     int y2 = std::min(y + 20, EPD_2IN9_V2_HEIGHT);
     Paint_ClearWindows(x, y, x2, y2, WHITE);
     Paint_DrawString_EN(x, y, buf, &Font12, WHITE, BLACK);
-    Serial.printf("[Display] Drawing poison for P%d: %s\n", playerId + 1, buf);
+    //Serial.printf("[Display] Drawing poison for P%d: %s\n", playerId + 1, buf);
     EPD_2IN9_V2_Display_Partial(frameBuffer);
 }
 
@@ -174,11 +174,11 @@ void DisplayManager::drawPoison(uint8_t playerId, int poison) {
 void DisplayManager::renderPlayerState(uint8_t playerId, const PlayerState& state) {
     if (playerId >= 4) return;
 
-    Serial.printf("[Display] Rendering state for P%d — Life: %d, Poison: %d, Turn: %d\n",
+/*     Serial.printf("[Display] Rendering state for P%d — Life: %d, Poison: %d, Turn: %d\n",
                   playerId + 1,
                   state.eliminated ? 0 : state.life,
                   state.poison,
-                  state.isTurn);
+                  state.isTurn); */
 
     static int cachedLife[4] = {-1, -1, -1, -1};
     static int cachedPoison[4] = {-1, -1, -1, -1};

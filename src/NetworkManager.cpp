@@ -170,13 +170,12 @@ uint8_t NetworkManager::getPlayerID() {
 
 const char* NetworkManager::roleToString(DeviceRole role) {
     switch (role) {
-        case ROLE_HOST: return "Host";
-        case ROLE_CLIENT: return "Client";
-        case ROLE_UNDEFINED: return "Undefined";
-        default: return "Unknown";
+        case ROLE_HOST: return "🧠 Host";
+        case ROLE_CLIENT: return "🎮 Client";
+        case ROLE_UNDEFINED: return "❓ Undefined";
+        default: return "🚫 Unknown";
     }
 }
-
 
 // =================================================================================
 //

@@ -13,7 +13,7 @@ IInputManager* input = &hwInput;
 #endif
 
 void setup() {
-  delay(5000);  // Allow time for serial monitor to connect
+  delay(50);  // Allow time for serial monitor to connect
   Serial.begin(115200);
   Serial.println("\n[Main] Setup starting...");
 
@@ -32,18 +32,18 @@ void setup() {
   gameSetup.begin();        // Initialize game setup  
   Serial.println("\n[Main] Game setup environment prepared");
 
-/*   network.sendGameState();  // Send game state to all devices
+  network.sendGameState();  // Send game state to all devices
   if (network.getRole() == ROLE_CLIENT) {
       Serial.println("\n[Main] Setup received from host");
-  } */
+  }
 
-/*   gameState.begin(device.getPlayerId(), gameSetup.getStartingLife());
-  Serial.printf("[Main] Game state initialized for player %d with life %d\n", device.getPlayerId(), gameSetup.getStartingLife());
+  gameState.begin(device.getPlayerId(), gameSetup.getStartingLife());
+  //Serial.printf("\n[Main] Game state initialized for player %d with life %d\n", device.getPlayerId(), gameSetup.getStartingLife());
 
   for (int id = 0; id < gameSetup.getPlayerCount(); ++id) {
     display.renderPlayerState(id, gameState.getPlayerState(id));
-    Serial.printf("[Render] Drawing player %d\n", id);
-  } */
+    //Serial.printf("[Render] Drawing player %d\n", id);
+  }
 
   EPD_2IN9_V2_Display(display.frameBuffer);
 }
@@ -56,25 +56,23 @@ void loop() {
       Serial.printf("[Loop] Heartbeat - Player ID: %d, Role: %s\n",
               device.getPlayerId(),
               NetworkManager::roleToString(network.getRole()));
-    // Serial.printf("[Loop] Heartbeat - Player ID: %d, Is Host: %s\n", device.getPlayerId(), network.getRole());
     Serial.println("");
     lastHeartbeat = millis();
     }
 
-  //network.update();
-  //input->update();             // Poll and update input state
+  input->update();             // Poll and update input state
 
-  // if (input->getRotation() != 0) {
-  //   Serial.print("Rotated: ");
-  //   Serial.println(input->getRotation());    // Log rotation input
-  //   Serial.print("[Loop] getRotation: ");
-  //   Serial.println(input->getRotation());
-  // }
+  if (input->getRotation() != 0) {
+    Serial.print("Rotated: ");
+    Serial.println(input->getRotation());    // Log rotation input
+    Serial.print("[Loop] getRotation: ");
+    Serial.println(input->getRotation());
+  }
 
-  // if (input->wasButtonShortPressed()) {
-  //   Serial.println("Short press detected");  // Handle short button press action
-  //   Serial.printf("[Input] Rotation delta: %d\n", input->getRotation());
-  // }
+  if (input->wasButtonShortPressed()) {
+    Serial.println("Short press detected");  // Handle short button press action
+    Serial.printf("[Input] Rotation delta: %d\n", input->getRotation());
+  }
 
   // if (input->wasButtonLongPressed()) {
   //   Serial.println("Long press detected");

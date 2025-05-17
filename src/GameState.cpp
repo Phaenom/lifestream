@@ -5,7 +5,7 @@
 GameState gameState;
 
 void GameState::begin(int id, int life) {
-    Serial.println("[GameSetup] Host beginning game setup...");
+    Serial.println("\n[GameSetup] Host beginning game setup...");
     localPlayerId = id;
     startingLife = life;
     currentTurnPlayer = 0;
@@ -19,7 +19,7 @@ void GameState::begin(int id, int life) {
     }
 
     display.renderPlayerState(localPlayerId, players[localPlayerId]);
-    Serial.printf("[GameState] Initialized as player %d with starting life %d\n", id, life);
+    //Serial.printf("[GameState] Initialized as player %d with starting life %d\n", id, life);
 }
 
 void GameState::reset() {
