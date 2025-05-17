@@ -71,7 +71,7 @@ typedef struct HostAnnounce {
 class NetworkManager {
 public:
     void begin();                           // Initialize networking and start discovery
-    void update();                          // Called regularly from loop()
+    void updateRole();                          // Called regularly from loop()
     DeviceRole getRole();                   // Returns the current device role
     uint8_t getPlayerID();                  // Returns assigned player ID
 
@@ -86,13 +86,14 @@ public:
     uint8_t currentTurn = 0;
     uint8_t lifeTotals[4] = {20, 20, 20, 20};
     DeviceRole role = ROLE_UNDEFINED;       // Current device role
+    static const char* roleToString(DeviceRole role);
 
 private:
     uint8_t myPlayerID = 0;                 // Device's assigned player ID
 
     void setupESPNow();                     // Initialize ESP-NOW
-    void startAsHost();                     // Set this device as Host
-    void startAsClient();                   // Set this device as Client
+    void becomeHost();                     // Set this device as Host
+    void becomeClient();                   // Set this device as Client
 
     bool hostDetected = false;              // Flag to indicate if Host was detected during discovery
     unsigned long discoveryStartTime = 0;   // Time when discovery started

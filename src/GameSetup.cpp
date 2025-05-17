@@ -4,7 +4,7 @@
 GameSetup gameSetup;
 
 void GameSetup::begin() {
-    Serial.println("\n[Init] GameSetup initialized.");
+    Serial.println("\n[GameSetup] initialized.");
 
     // TODO: Replace with interactive setup using Display + Input
     startingLife = 20;

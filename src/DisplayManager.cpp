@@ -17,14 +17,11 @@ struct PlayerDisplayRegion {
 
 // PLAYER_LAYOUT specifies display regions for each player.
 // Each entry: {lifeX, lifeY, poisonX, poisonY, turnX, turnY}
-//   - lifeX, lifeY: center of player's life total display
-//   - poisonX, poisonY: center of player's poison counter display
-//   - turnX, turnY: location for player's turn indicator (blinking circle)
 const PlayerDisplayRegion PLAYER_LAYOUT[4] = {
-    {40, 30,  45, 49,  10, 30},     // Player 1: (LIFE X, LIFE Y, POISON X, POISON Y, TURN X, TURN Y)
-    {198, 30, 203, 49, 168, 30},    // Player 2: (LIFE X, LIFE Y, POISON X, POISON Y, TURN X, TURN Y)
-    {40, 90,  45, 109,  10, 90},    // Player 3: (LIFE X, LIFE Y, POISON X, POISON Y, TURN X, TURN Y)
-    {198, 90, 203, 109, 168, 90}    // Player 4: (LIFE X, LIFE Y, POISON X, POISON Y, TURN X, TURN Y)
+    {40, 30,  45, 49,  10, 30},     // Player 1
+    {198, 30, 203, 49, 168, 30},    // Player 2
+    {40, 90,  45, 109,  10, 90},    // Player 3
+    {198, 90, 203, 109, 168, 90}    // Player 4
 };
 
 DisplayManager::DisplayManager() {}
@@ -61,14 +58,13 @@ void DisplayManager::begin() {
     Paint_DrawString_EN(titleX, titleY, title, &Font16, BLACK, WHITE);
     drawLogo(logoX, logoY);
 
-    // DEBUG: Draw corner text markers to validate screen alignment
+    // Draw player labels in each quadrant
     Paint_DrawString_EN(0, 0, "P1", &Font12, BLACK, WHITE);             // Top-left
     Paint_DrawString_EN(280, 0, "P2", &Font12, BLACK, WHITE);           // Top-right
     Paint_DrawString_EN(0, 115, "P3", &Font12, BLACK, WHITE);           // Bottom-left
     Paint_DrawString_EN(280, 115, "P4", &Font12, BLACK, WHITE);         // Bottom-right
 
     EPD_2IN9_V2_Display(frameBuffer);
-    Serial.println("[Display] Display initialized and cleared");
 
     DEV_Delay_ms(10);
 }

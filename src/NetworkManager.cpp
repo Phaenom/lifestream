@@ -24,7 +24,6 @@ void OnDataRecv(const uint8_t *mac, const uint8_t *incomingData, int len) {
 void NetworkManager::begin() {
     WiFi.mode(WIFI_STA);  // ESP-NOW only works in station (STA) mode
     setupESPNow();        // Initialize ESP-NOW layer
-    Serial.println("Searching for Host...");
     esp_now_register_recv_cb(OnDataRecv); // Set up callback to receive packets
     discoveryStartTime = millis();        // Start a timer for host discovery timeout
 }
@@ -32,18 +31,18 @@ void NetworkManager::begin() {
 // Main loop to manage network state.
 // If role is not yet determined, check for host presence within a timeout.
 // If host, send game state and announcements at regular intervals.
-void NetworkManager::update() {
+void NetworkManager::updateRole() {
     if (role == ROLE_UNDEFINED) {
         // If host not detected within 5 seconds, become the host.
         if (millis() - discoveryStartTime > 5000) {
+            Serial.print("\nHost Detected? ");
             if (hostDetected) {
-                startAsClient();  // A host exists — become a client
+                becomeClient();  // A host exists — become a client
+                Serial.println(hostDetected);
             } else {
-                startAsHost();    // No host found — promote self to host
+                becomeHost();    // No host found — promote self to host
             }
         }
-        Serial.print("Host Detected? ");
-        Serial.println(hostDetected);
     }
 
     // Host responsibilities: broadcast presence and sync game state
@@ -60,8 +59,8 @@ void NetworkManager::update() {
 
 // Promote device to Host role.
 // Assign self Player ID 0 and add a broadcast peer for ESP-NOW sends.
-void NetworkManager::startAsHost() {
-    Serial.println("Becoming HOST");
+void NetworkManager::becomeHost() {
+    Serial.println("\nBecoming HOST");
     role = ROLE_HOST;
     myPlayerID = 0; // Convention: host is always Player 0
 
@@ -77,7 +76,7 @@ void NetworkManager::startAsHost() {
 
 // Promote device to Client role.
 // For now, assigns a static Player ID of 1 (should eventually be dynamic).
-void NetworkManager::startAsClient() {
+void NetworkManager::becomeClient() {
     Serial.println("Becoming CLIENT");
     role = ROLE_CLIENT;
     myPlayerID = 1;
@@ -167,6 +166,15 @@ DeviceRole NetworkManager::getRole() {
 // Return the current player ID assigned to this device
 uint8_t NetworkManager::getPlayerID() {
     return myPlayerID;
+}
+
+const char* NetworkManager::roleToString(DeviceRole role) {
+    switch (role) {
+        case ROLE_HOST: return "Host";
+        case ROLE_CLIENT: return "Client";
+        case ROLE_UNDEFINED: return "Undefined";
+        default: return "Unknown";
+    }
 }
 
 

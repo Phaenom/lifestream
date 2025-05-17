@@ -2,7 +2,7 @@
 #include "Config.h"
 
 #ifdef SIMULATION_MODE
-#warning SIMULATION_MODE is enabled
+//#warning SIMULATION_MODE is enabled
 #include "testing/SimulationInputManager.h"
 SimulationInputManager simInput;
 IInputManager* input = &simInput;
@@ -12,39 +12,38 @@ InputManager hwInput;
 IInputManager* input = &hwInput;
 #endif
 
-
 void setup() {
-  delay(2000);
+  delay(5000);  // Allow time for serial monitor to connect
   Serial.begin(115200);
-  Serial.println("\n[Main] Setup starting...\n");
+  Serial.println("\n[Main] Setup starting...");
 
-  network.begin();    // Initialize network system
+  network.begin();          // Initialize network system
   Serial.println("\n[Main] Network initialized");
 
-  display.begin();    // Initialize e-paper display
+  display.begin();          // Initialize e-paper display
   Serial.println("\n[Main] Display initialized");
 
-  input->begin();     // Initialize input system
+  input->begin();           // Initialize input system
   Serial.println("\n[Main] Input system initialized");
 
-  // Assume host until setup packet is received
-  //device.assumeHostRole();
+  network.updateRole();     // Check and update device role  
+  Serial.printf("\n[Main] Role Assigned: %s\n", NetworkManager::roleToString(network.getRole()));
 
-  gameSetup.begin();
+  gameSetup.begin();        // Initialize game setup  
+  Serial.println("\n[Main] Game setup environment prepared");
 
-  network.sendGameState();
+/*   network.sendGameState();  // Send game state to all devices
+  if (network.getRole() == ROLE_CLIENT) {
+      Serial.println("\n[Main] Setup received from host");
+  } */
 
-  delay(500);                  // Prepare game setup environment
-  Serial.println("[Main] Game setup environment prepared");
-
-  Serial.println("[Main] Setup received from host");
-  gameState.begin(device.getPlayerId(), gameSetup.getStartingLife());
+/*   gameState.begin(device.getPlayerId(), gameSetup.getStartingLife());
   Serial.printf("[Main] Game state initialized for player %d with life %d\n", device.getPlayerId(), gameSetup.getStartingLife());
 
   for (int id = 0; id < gameSetup.getPlayerCount(); ++id) {
     display.renderPlayerState(id, gameState.getPlayerState(id));
     Serial.printf("[Render] Drawing player %d\n", id);
-  }
+  } */
 
   EPD_2IN9_V2_Display(display.frameBuffer);
 }
@@ -52,13 +51,18 @@ void setup() {
 void loop() {
   // Heartbeat - Used for debugging to ensure loop is active
   static unsigned long lastHeartbeat = 0;
-    if (millis() - lastHeartbeat > 30000) {
-    Serial.printf("[Loop] Heartbeat - Player ID: %d, Is Host: %s\n", device.getPlayerId(), network.getRole());
+    if (millis() - lastHeartbeat > 5000) {
+    Serial.println("");
+      Serial.printf("[Loop] Heartbeat - Player ID: %d, Role: %s\n",
+              device.getPlayerId(),
+              NetworkManager::roleToString(network.getRole()));
+    // Serial.printf("[Loop] Heartbeat - Player ID: %d, Is Host: %s\n", device.getPlayerId(), network.getRole());
+    Serial.println("");
     lastHeartbeat = millis();
     }
 
-  network.update();
-  input->update();             // Poll and update input state
+  //network.update();
+  //input->update();             // Poll and update input state
 
   // if (input->getRotation() != 0) {
   //   Serial.print("Rotated: ");

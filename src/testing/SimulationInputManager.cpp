@@ -5,7 +5,7 @@
 // Outputs a startup message to Serial for confirmation.
 void SimulationInputManager::begin() {
     Serial.println("\n[SimInput] Simulation input initialized.");
-    Serial.printf("[InputManager] Update cycle at %lu ms\n", millis());
+    Serial.printf("\n[InputManager] Update cycle at %lu ms", millis());
 }
 
 // Checks for incoming serial input and maps characters to simulated input behavior.
