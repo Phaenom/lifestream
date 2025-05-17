@@ -1,23 +1,25 @@
 
 #include <Arduino.h>
 #include "src/NetworkManager.h"
-#include "src/OutputManager.h"
 #include "src/GameState.h"
 #include "src/Config.h"
 #include "src/assets/mtg_logo_symbol.h"
 #include "src/DisplayManager.h"
-#include "src/InputManager.h"  // Placeholder for future input handling
+//#include "src/InputManager.h"  // Placeholder for future input handling
+//#include "src/OutputManager.h"
+#include "src/HardwareManager.h" // merges input and output managers  
 
 NetworkArbiter network;
 DisplayManager display;
 //could merge into a single hardware manager ? iunno they let you type anything here
-InputManager input;  // Future use for button/encoder
-OutputManager output;  // Responsible for all LED and buzzer output
+//InputManager input;  // Future use for button/encoder
+//OutputManager output;  // Responsible for all LED and buzzer output
+HardwareManager hardware; // responsible for all hardware input and output managers
 
 // experimenting with decoupling logic loop and screen refresh
-int temp = 0;
+// int temp = 0;
 unsigned long previousMillis = 0;  
-unsigned long interval = 1000;  // ms    
+// unsigned long interval = 1000;  // ms    
 
 
 // Arduino setup() runs once when the device starts
@@ -38,7 +40,7 @@ int lastTurnPlayerID = -1;
 int myLife = 20;
 int myPoison = 0;
 
-String mode = "poison"; // life, poison, tech specs
+String mode = "life"; // life, poison, tech specs
 
 void setup() {
     Serial.begin(115200);
@@ -54,8 +56,10 @@ void setup() {
 
     previousMillis = millis(); // Update the last time the display was updated
 
-    input.begin();   // buttons, encoders, etc
-    output.begin();  // buzzers, LEDs, etc
+    // input.begin();   // buttons, encoders, etc
+    // output.begin();  // buzzers, LEDs, etc
+    hardware.begin(); // Initialize hardware for inputs and outputs
+
     Serial.println("Setup complete");
 }
 
@@ -77,7 +81,7 @@ void loop() {
     currentTurnPlayerID = network.currentTurn;
     myPlayerID = network.getPlayerID();
 
-    myLife += input.update_encoder(); // Update player X's life based on encoder input
+    myLife += hardware.update_encoder(); // Update player X's life based on encoder input
     network.sendLifeUpdate(myLife);
     if (myLife != network.lifeTotals[myPlayerID]) {
         changed = true; // Set changed to true to trigger display updat
@@ -88,15 +92,15 @@ void loop() {
 
     // technically this send LED OFF signal every loop- better way?
     if (currentTurnPlayerID != myPlayerID) {
-        output.update(LOW);  // Turn off LED or buzzer
+        hardware.update(LOW);  // Turn off LED or buzzer
     }
 
     if (currentTurnPlayerID == myPlayerID) {
-        output.update(HIGH);  // Turn on LED or buzzer for your turn
+        hardware.update(HIGH);  // Turn on LED or buzzer for your turn
     }
 
     // check if it is your turn:  button press -> turn on/off LEDs & send turn change
-    if (input.get_arcade_button() ){
+    if (hardware.get_arcade_button() ){
 
         //debug
         Serial.println("arcade button pressed"); 
@@ -115,7 +119,7 @@ void loop() {
       //  }
     }
 
-    if (input.get_encoder_button() ) {
+    if (hardware.get_encoder_button() ) {
         //debug
         Serial.println("encoder button pressed"); 
         //debug
