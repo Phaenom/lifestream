@@ -1,6 +1,6 @@
 // InputManager.cpp
-// This source file implements the InputManager class, which handles rotary encoder input and button press detection.
-// It manages encoder rotation counting via interrupts and distinguishes between short and long button presses.
+// Implements the InputManager class to handle rotary encoder input and button press detection.
+// Manages encoder rotation counting via interrupts and differentiates between short and long button presses.
 
 #include <Arduino.h>
 #include "InputManager.h"
@@ -17,7 +17,7 @@ const int BUTTON_PIN    = 32;
 volatile int encoderPosition = 0;
 
 // Interrupt Service Routine to handle encoder rotation changes
-// Increments or decrements encoderPosition based on the state of encoder pins
+// Increments or decrements encoderPosition based on encoder pins state
 void IRAM_ATTR encoderISR() {
     int a = digitalRead(ENCODER_PIN_A);
     int b = digitalRead(ENCODER_PIN_B);
@@ -43,9 +43,7 @@ void InputManager::update() {
     encoderPosition = 0;
     interrupts();
 
-    //Serial.printf("[InputManager] Rotation delta: %d\n", rotationDelta);
-
-    // Static variable to remember last button state across calls
+    // Static variable to store last button state across calls
     static bool lastButton = HIGH;
     // Read current button state
     bool currentButton = digitalRead(BUTTON_PIN);
@@ -63,10 +61,10 @@ void InputManager::update() {
     if (currentButton == HIGH && lastButton == LOW) {
         unsigned long pressTime = now - buttonPressTime;  // Calculate press duration
         if (pressTime >= 1000) {
-            longPressDetected = true;  // Long press if held >= 1000 ms
+            longPressDetected = true;  // Long press if held for 1000 ms or more
             Serial.printf("[InputManager] Button released after %lu ms (long press)\n", pressTime);
         } else {
-            shortPressDetected = true;                   // Otherwise, short press
+            shortPressDetected = true;  // Otherwise, short press
             Serial.printf("[InputManager] Button released after %lu ms (short press)\n", pressTime);
         }
         buttonHeld = false;
@@ -84,7 +82,6 @@ int InputManager::getRotation() const {
         return hardware.update_encoder();
     #endif
 }
-
 
 // Returns true if a short button press was detected since the last call, then clears the flag
 bool InputManager::wasButtonShortPressed() const {

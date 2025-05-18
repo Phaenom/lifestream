@@ -19,7 +19,6 @@ void GameState::begin(int id, int life) {
     }
 
     display.renderPlayerState(localPlayerId, players[localPlayerId]);
-    //Serial.printf("[GameState] Initialized as player %d with starting life %d\n", id, life);
 }
 
 void GameState::reset() {
@@ -82,7 +81,7 @@ void GameState::nextTurn() {
     currentTurnPlayer = (currentTurnPlayer + 1) % playerCount;
     players[currentTurnPlayer].isTurn = true;
     display.renderPlayerState(currentTurnPlayer, players[currentTurnPlayer]);
-    //network.sendGameState(currentTurnPlayer, players[currentTurnPlayer]);
+
     Serial.printf("[GameState] Turn passed from Player %d to Player %d\n", 
                   (currentTurnPlayer + playerCount - 1) % playerCount, currentTurnPlayer);
 }
@@ -127,7 +126,6 @@ void GameState::adjustLife(uint8_t playerId, int delta) {
 bool GameState::lifeChanged(uint8_t playerId, int previousValue) {
     return previousValue != getLife(playerId);
 }
-
 
 int GameState::getLife(uint8_t playerId) const {
     if (playerId >= 4) return -1;

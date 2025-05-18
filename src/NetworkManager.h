@@ -11,11 +11,11 @@
 //
 // =================================================================================
 
-// Define possible roles this device can take in the networked game.
+// Device roles in the networked game.
 enum DeviceRole {
     ROLE_UNDEFINED, // Role not yet determined
-    ROLE_HOST,      // This device acts as Host
-    ROLE_CLIENT     // This device acts as Client
+    ROLE_HOST,      // Acts as Host
+    ROLE_CLIENT     // Acts as Client
 };
 
 // =================================================================================
@@ -32,12 +32,12 @@ enum DeviceRole {
 
 // =================================================================================
 //
-// STRUCTURES USED FOR ESP-NOW COMMUNICATION
+// ESP-NOW COMMUNICATION STRUCTURES
 //
 // =================================================================================
 
-// Sent by the host to all clients to broadcast the current game state
-typedef struct GameData{
+// Broadcast by Host to all Clients with current game state
+typedef struct GameData {
     uint8_t messageType;
     uint8_t playerCount;
     uint8_t currentTurn;
@@ -46,24 +46,25 @@ typedef struct GameData{
     uint8_t senderID;
 } GameData;
 
-// Life total change request sent by Client to Host
-typedef struct LifeChange{
+// Life total change request from Client to Host
+typedef struct LifeChange {
     uint8_t messageType;
     uint8_t senderID;
     uint8_t newLifeTotal;
 } LifeChange;
 
-// Turn pass request sent by Client to Host
+// Turn pass request from Client to Host
 typedef struct TurnChange {
     uint8_t messageType;
     uint8_t senderID;
 } TurnChange;
 
-// Host announcing itself for discovery
+// Host announcement for discovery
 typedef struct HostAnnounce {
     uint8_t messageType;
 } HostAnnounce;
 
+// Poison total change request from Client to Host
 typedef struct PoisonChange {
     uint8_t messageType;    // = MSG_TYPE_POISON_CHANGE
     uint8_t senderID;
@@ -79,103 +80,50 @@ typedef struct PoisonChange {
 class NetworkManager {
 public:
     void begin();                           // Initialize networking and start discovery
-    void updateRole();                          // Called regularly from loop()
-    DeviceRole getRole();                   // Returns the current device role
+    void updateRole();                      // Called regularly from loop()
+    DeviceRole getRole();                   // Returns current device role
     uint8_t getPlayerID();                  // Returns assigned player ID
 
-    void sendLifeUpdate(uint8_t life);      // Client requests life change
+    void sendLifeUpdate(uint8_t life);     // Client requests life change
     void sendTurnChange();                  // Client requests turn change
     void sendGameState();                   // Host sends full GameData to Clients
 
     void onDataReceive(const uint8_t *mac, const uint8_t *incomingData, int len);  // Handle received messages
 
-    // Public Game State Variables shared between Host and Clients
+    // Shared game state variables
     uint8_t playerCount = 4;
     uint8_t currentTurn = 0;
     uint8_t lifeTotals[4] = {20, 20, 20, 20};
     DeviceRole role = ROLE_UNDEFINED;       // Current device role
+
     static const char* roleToString(DeviceRole role);
-    void heartbeat();  // Called regularly in loop()
+
+    void heartbeat();                       // Called regularly in loop()
     const uint8_t* getHostMAC() const;
-   
+
+    // Pending game state handling
     GameData pendingGameState;
     bool hasPendingGameState = false;
-    bool readyToApplyGameState = false;  // Wait until display is ready
-    void markReady();  // Called once display is initialized
+    bool readyToApplyGameState = false;    // Wait until display is ready
+
+    void markReady();                       // Called once display is initialized
     void applyPendingGameState();
+
     void sendLifeChangeRequest(uint8_t playerId, uint8_t newLifeTotal);
     void sendPoisonChangeRequest(uint8_t playerId, uint8_t newPoison);
 
 private:
-    uint8_t myPlayerID = 0;                 // Device's assigned player ID
+    uint8_t myPlayerID = 0;                 // Assigned player ID
 
     void setupESPNow();                     // Initialize ESP-NOW
-    void becomeHost();                     // Set this device as Host
-    void becomeClient();                   // Set this device as Client
+    void becomeHost();                      // Set device as Host
+    void becomeClient();                    // Set device as Client
 
-    bool hostDetected = false;              // Flag to indicate if Host was detected during discovery
-    unsigned long discoveryStartTime = 0;   // Time when discovery started
-    uint8_t hostMac[6] = {0};  // Store the MAC of the detected host
-    
+    bool hostDetected = false;              // Indicates if Host was detected during discovery
+    unsigned long discoveryStartTime = 0;  // Discovery start time
+    uint8_t hostMac[6] = {0};               // MAC address of detected Host
 };
 
-extern NetworkManager network;  // <-- external declaration
+extern NetworkManager network;  // External declaration
 
 #endif
-
-
-// =================================================================================
-//
-// NETWORK MANAGER IMPLEMENTATION
-//      SECONDARY VERSION (NOT WORKING) LEFT FOR REFERENCE
-//
-// =================================================================================
-
-/* #ifndef NETWORK_MANAGER_H
-#define NETWORK_MANAGER_H
-
-#pragma once
-
-#include <Arduino.h>
-#include <esp_now.h>
-#include <WiFi.h>
-#include "DisplayManager.h"
-#include "esp_wifi.h"
-
-constexpr uint8_t PACKET_TYPE_SETUP         = 0;
-constexpr uint8_t PACKET_TYPE_PLAYER_UPDATE = 1;
-constexpr uint8_t PACKET_TYPE_TURN_REQUEST  = 2;
-constexpr uint8_t PACKET_TYPE_JOIN_REQUEST  = 3;
-constexpr uint8_t PACKET_TYPE_PLAYER_ASSIGN = 4;
-
-#pragma pack(push, 1)
-struct GameSyncPacket {
-    uint8_t playerId;
-    uint8_t type;         // 0 = GameSetup, 1 = PlayerState update
-    uint8_t playerCount;
-    uint8_t life;
-    uint8_t poison;
-    uint8_t isTurn;
-    uint8_t eliminated;
-};
-#pragma pack(pop)
-
-class NetworkManager {
-public:
-    void begin();
-    void sendGameState(uint8_t playerId, const PlayerState& state);
-    void sendGameSetup(uint8_t playerCount, uint8_t startingLife);
-    void sendTurnAdvanceRequest(uint8_t playerId);
-    bool hasHost() const;
-    bool hasReceivedGameParams() const;
-    void sendJoinRequest();
-    static void sendGameSetupTo(const uint8_t* dest, uint8_t playerCount, uint8_t startingLife);
-
-
-private:
-    static void onDataReceived(const uint8_t* mac, const uint8_t* data, int len);
-    static void sendPlayerAssign(const uint8_t* dest, uint8_t playerId);
-    static uint8_t nextAvailableId();
-};
-
-#endif */

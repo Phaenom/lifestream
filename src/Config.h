@@ -15,8 +15,8 @@
 #include "BatteryManager.h"
 #include "EEPROMManager.h"
 #include "Utils.h"
-#include "IInputManager.h"        // Interface for input management
-#include "HardwareManager.h"    // HardwareManager class for handling hardware inputs/outputs
+#include "IInputManager.h"
+#include "HardwareManager.h"
 
 // =================================================================================
 //
@@ -24,32 +24,19 @@
 //
 // =================================================================================
 
-// EINK Pin definitions
-/* #define EPD_CS_PIN 5
-#define EPD_DC_PIN 17
-#define EPD_RST_PIN 16
-#define EPD_BUSY_PIN 4 */
+// --- Rotary Encoder Pins ---
+#define EPD_DT              26  // Rotary encoder data pin
+#define EPD_CLK             17  // Rotary encoder clock pin
+#define EPD_BUTTON_ENCODER  21  // Rotary encoder push button
 
-// epd = ???
+// --- Arcade Button + LED ---
+#define EPD_BUTTON          19  // End turn (arcade) button
+#define EPD_BUTTON_LED      14  // LED inside arcade button
 
-// ENCODER Pin definitions
-#define EPD_DT 26 // rotary encoder
-#define EPD_CLK 17 // rotary encoder
-#define EPD_BUTTON_ENCODER 21 // encoder button
+// --- Buzzer ---
+#define EPD_BUZZ            18  // Piezo buzzer output pin
 
-// ARCADE BUTTON Pin definitions
-#define EPD_BUTTON 19 // end turn button - rename to arcade button
-#define EPD_BUTTON_LED 14 // button's LED
-
-#define EPD_BUZZ 18 // piezo buzzer
-
-#define EPD_ONBOARD_LED 2 // onboard LED - not used
-
-//#define EPD_CLK 13 // rotary encoder
-// #define EPD_BUTTON_ENCODER 27 // encoder button
-// #define EPD_BUTTON 21 // end turn button
-//#define EPD_BUTTON 25 // end turn button
-
-//#define EPD_LED 99 // button's LED <-replace with real pin
+// --- Onboard LED (unused) ---
+#define EPD_ONBOARD_LED      2  // Onboard LED (currently unused)
 
 #endif

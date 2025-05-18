@@ -50,6 +50,7 @@ void DisplayManager::begin() {
     const int logoY = (EPD_2IN9_V2_WIDTH - MTG_LOGO_SYMBOL_HEIGHT) / 2;
     Paint_SetRotate(ROTATE_270);
     Paint_ClearWindows(logoX, logoY, logoX + MTG_LOGO_SYMBOL_WIDTH, logoY + MTG_LOGO_SYMBOL_HEIGHT, WHITE);
+
     // Draw centered title above the logo
     const char* title = "LIFESTREAM";
     int titleWidth = strlen(title) * Font16.Width;
@@ -123,10 +124,8 @@ void DisplayManager::drawLife(uint8_t playerId, int life) {
     if (lastLife[playerId] == life) return;
     lastLife[playerId] = life;
 
-    // ✅ Check PLAYER_LAYOUT bounds
     const auto& region = PLAYER_LAYOUT[playerId];
 
-    // ✅ Handle text formatting
     const char* str = nullptr;
     char buf[16] = {0};
     if (life <= 0) {
@@ -136,42 +135,36 @@ void DisplayManager::drawLife(uint8_t playerId, int life) {
         str = buf;
     }
 
-    // ✅ Protect against nullptr font
     if (&Font12 == nullptr || str == nullptr) {
         Serial.println("[Display] Font12 or str is null — skipping draw");
         return;
     }
 
-    // ✅ Font-safe calculation
     int textWidth = strlen(str) * Font12.Width;
     int x = region.lifeX - textWidth / 2;
     x = std::max(0, std::min(x, EPD_2IN9_V2_HEIGHT - textWidth));
     int y = std::max(0, std::min(region.lifeY - 8, 128 - 16));
 
-    // ✅ Validate displayBuffer and drawing bounds
     if (displayBuffer == nullptr) {
         Serial.println("[Display] displayBuffer is null — skipping partial draw");
         return;
     }
 
-    // ✅ Perform draw
     int x2 = std::min(x + 100, EPD_2IN9_V2_HEIGHT);
     int y2 = std::min(y + 20, EPD_2IN9_V2_HEIGHT);
     Paint_ClearWindows(x, y, x2, y2, WHITE);
     Paint_DrawString_EN(x, y, str, &Font12, WHITE, BLACK);
 
-    // ✅ Flush only if screen is ready
     EPD_2IN9_V2_Display_Partial(displayBuffer);
 }
-
 
 // Renders the poison counter for the specified player in their assigned screen region.
 void DisplayManager::drawPoison(uint8_t playerId, int poison) {
     static int lastPoison[4] = {-1, -1, -1, -1};
+    if (playerId >= 4) return;
     if (lastPoison[playerId] == poison) return;
     lastPoison[playerId] = poison;
 
-    if (playerId >= 4) return;
     const auto& region = PLAYER_LAYOUT[playerId];
     char buf[16];
     snprintf(buf, sizeof(buf), "%d [!]", poison);
@@ -183,7 +176,7 @@ void DisplayManager::drawPoison(uint8_t playerId, int poison) {
     int y2 = std::min(y + 20, EPD_2IN9_V2_HEIGHT);
     Paint_ClearWindows(x, y, x2, y2, WHITE);
     Paint_DrawString_EN(x, y, buf, &Font12, WHITE, BLACK);
-    //Serial.printf("[Display] Drawing poison for P%d: %s\n", playerId + 1, buf);
+
     EPD_2IN9_V2_Display_Partial(displayBuffer);
 }
 
@@ -194,19 +187,13 @@ void DisplayManager::drawPoison(uint8_t playerId, int poison) {
 void DisplayManager::renderPlayerState(uint8_t playerId, const PlayerState& state) {
     Serial.printf("[Display] Rendering P%d: life=%d, poison=%d, turn=%d\n",
                   playerId, state.life, state.poison, state.isTurn);
-    
+
     if (displayBuffer == nullptr) {
         Serial.println("[Display] displayBuffer is null!");
         return;
     }
 
     if (playerId >= 4) return;
-
-/*     Serial.printf("[Display] Rendering state for P%d — Life: %d, Poison: %d, Turn: %d\n",
-                  playerId + 1,
-                  state.eliminated ? 0 : state.life,
-                  state.poison,
-                  state.isTurn); */
 
     static int cachedLife[4] = {-1, -1, -1, -1};
     static int cachedPoison[4] = {-1, -1, -1, -1};

@@ -6,47 +6,45 @@
 #include "Config.h"
 
 /**
- * InputManager handles rotary encoder input and button press detection.
- * It tracks rotation changes and distinguishes between short and long button presses.
+ * Handles rotary encoder input and button press detection.
+ * Tracks rotation changes and distinguishes between short and long presses.
  */
 class InputManager : public IInputManager {
 public:
     /**
-     * Initializes the input manager, setting up necessary hardware or state.
-     * Typically called once during system startup.
+     * Initializes input hardware and state.
+     * Should be called once during system startup.
      */
     void begin() override;
 
     /**
-     * Updates the input manager state by reading inputs.
-     * Should be called regularly in the main loop.
+     * Polls hardware and updates input state.
+     * Should be called frequently in the main loop.
      */
     void update() override;
 
     /**
-     * Returns the amount of rotation detected since the last update.
+     * Returns the net rotation delta since last read.
      * Positive or negative values indicate direction.
      */
     int getRotation() const override;
 
     /**
-     * Returns true if a short button press was detected since the last update.
+     * Returns true if a short button press occurred since the last read.
      */
     bool wasButtonShortPressed() const override;
 
     /**
-     * Returns true if a long button press was detected since the last update.
+     * Returns true if a long button press occurred since the last read.
      */
     bool wasButtonLongPressed() const override;
 
 private:
-    mutable int rotationDelta = 0;             // Tracks the change in rotation since last update
-    bool buttonHeld = false;           // Indicates if the button is currently held down
-    unsigned long buttonPressTime = 0; // Timestamp when the button was pressed
-    mutable bool shortPressDetected = false;  // Flag set when a short press is detected
-    mutable bool longPressDetected = false;   // Flag set when a long press is detected
+    mutable int rotationDelta = 0;              // Accumulated rotation since last update
+    bool buttonHeld = false;                    // True if button is currently held down
+    unsigned long buttonPressTime = 0;          // Time when button was first pressed
+    mutable bool shortPressDetected = false;    // Set if short press detected since last update
+    mutable bool longPressDetected = false;     // Set if long press detected since last update
 };
-
-//extern InputManager input;
 
 #endif

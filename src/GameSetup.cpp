@@ -1,6 +1,7 @@
 #include "GameSetup.h"
 #include <Arduino.h>
 
+// Global GameSetup instance
 GameSetup gameSetup;
 
 void GameSetup::begin() {
@@ -9,9 +10,9 @@ void GameSetup::begin() {
     // TODO: Replace with interactive setup using Display + Input
     startingLife = 20;
     playerCount = 4;
-    Serial.println("");
+
     Serial.printf("[GameSetup] Default setup — Players: %d, Starting Life: %d\n", playerCount, startingLife);
-    configured = true;  // Simulate configuration for testing
+    configured = true;  // Mark as configured for testing
 }
 
 int GameSetup::getStartingLife() const {
@@ -26,6 +27,7 @@ void GameSetup::setFromNetwork(int players, int life) {
     playerCount = players;
     startingLife = life;
     configured = true;
+
     Serial.printf("[GameSetup] Received config: %d players, %d starting life\n", playerCount, startingLife);
 }
 

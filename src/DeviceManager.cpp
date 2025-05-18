@@ -1,6 +1,7 @@
 #include "DeviceManager.h"
 
-DeviceManager device; // Global instance of DeviceManager
+// Global DeviceManager instance
+DeviceManager device;
 
 void DeviceManager::begin() {
     Serial.println("[DeviceManager] Initialized.");
