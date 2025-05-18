@@ -96,6 +96,7 @@ void NetworkManager::sendGameState() {
 
     for (int i = 0; i < 4; ++i) {
         data.lifeTotal[i] = gameState.getPlayerState(i).life;
+        data.poisonTotal[i] = gameState.getPlayerState(i).poison;  // ✅ add this
     }
 
     esp_now_send(broadcastAddress, (uint8_t*)&data, sizeof(data));
@@ -177,6 +178,23 @@ void NetworkManager::onDataReceive(const uint8_t *mac, const uint8_t *incomingDa
                 sendGameState();
             }
             break;
+          
+        case MSG_TYPE_POISON_CHANGE: {
+            if (role == ROLE_HOST && len == sizeof(PoisonChange)) {
+                PoisonChange* change = (PoisonChange*)incomingData;
+                Serial.printf("[Network] Host received poison change: P%d → %d\n",
+                            change->senderID, change->newPoison);
+
+            int current = gameState.getPlayerState(change->senderID).poison;
+            int delta = change->newPoison - current;
+            gameState.adjustPoison(change->senderID, delta); // ✅ apply change
+
+            sendGameState(); // ✅ broadcast correct state
+
+            }
+            break;
+        }
+
     }
 }
 
@@ -265,8 +283,9 @@ void NetworkManager::applyPendingGameState() {
 
     for (int i = 0; i < 4; ++i) {
         PlayerState state;
-        state.life = lifeTotals[i];
-        state.poison = 0;
+        //state.life = lifeTotals[i];
+        state.life = pendingGameState.lifeTotal[i];
+        state.poison = pendingGameState.poisonTotal[i];
         state.eliminated = (lifeTotals[i] <= 0);
         state.isTurn = (i == currentTurn);
         display.renderPlayerState(i, state);
@@ -285,6 +304,16 @@ void NetworkManager::sendLifeChangeRequest(uint8_t playerId, uint8_t newLifeTota
 
     esp_err_t res = esp_now_send(hostMac, (uint8_t*)&change, sizeof(change));
     Serial.printf("[Network] Sent life update to host: P%d → %d (res=%d)\n", playerId, newLifeTotal, res);
+}
+
+void NetworkManager::sendPoisonChangeRequest(uint8_t playerId, uint8_t newPoison) {
+    PoisonChange change;
+    change.messageType = MSG_TYPE_POISON_CHANGE;
+    change.senderID = playerId;
+    change.newPoison = newPoison;
+
+    esp_err_t res = esp_now_send(hostMac, (uint8_t*)&change, sizeof(change));
+    Serial.printf("[Network] Sent poison update: P%d → %d (res=%d)\n", playerId, newPoison, res);
 }
 
 

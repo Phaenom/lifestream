@@ -40,6 +40,11 @@ void SimulationInputManager::update() {
                 gameState.getPlayerState(selectedPlayer).poison != oldPoison) {
                 network.sendGameState();
             }
+
+            if (network.getRole() == ROLE_CLIENT) {
+                uint8_t newPoison = gameState.getPlayerState(selectedPlayer).poison;
+                network.sendPoisonChangeRequest(selectedPlayer, newPoison);
+            }
             break;
 }
 
