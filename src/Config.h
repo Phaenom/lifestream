@@ -1,6 +1,15 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
+#pragma once
+
+// =====================================================
+// DEBUG MODE
+// Set to 1 to enable debug logs and serial UART
+// Set to 0 for power-optimized release mode
+// =====================================================
+#define ENABLE_DEBUG 0
+
 // =================================================================================
 //
 // HEADER FILE INCLUDES
@@ -38,5 +47,35 @@
 
 // --- Onboard LED (unused) ---
 #define EPD_ONBOARD_LED      2  // Onboard LED (currently unused)
+
+// =================================================================================
+//
+// LOGGING MACRO
+//
+//     HOW TO USE?
+//         IN setup()
+//             LOG_BEGIN(115200);
+//             LOGLN("Device starting up...");
+//
+//         Anywhere else:
+//             LOG("Life total: ");
+//             LOGLN(life);
+//
+//         With formatting:
+//             LOGF("Life: %d, Poison: %d\n", life, poison);
+//
+// =================================================================================
+
+#if ENABLE_DEBUG
+  #define LOG_BEGIN(baud) Serial.begin(baud)
+  #define LOG(x) Serial.print(x)
+  #define LOGLN(x) Serial.println(x)
+  #define LOGF(...) Serial.printf(__VA_ARGS__)
+#else
+  #define LOG_BEGIN(baud)
+  #define LOG(x)
+  #define LOGLN(x)
+  #define LOGF(...)
+#endif
 
 #endif
