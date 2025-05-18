@@ -50,10 +50,15 @@ void SimulationInputManager::update() {
 
             int oldLife = gameState.getLife(selectedPlayer);
             gameState.adjustLife(selectedPlayer, delta);
-            
+
             if (network.getRole() == ROLE_HOST &&
                 gameState.lifeChanged(selectedPlayer, oldLife)) {
                 network.sendGameState();
+            }
+
+            if (network.getRole() == ROLE_CLIENT) {
+                uint8_t newLife = gameState.getLife(selectedPlayer);
+                network.sendLifeChangeRequest(selectedPlayer, newLife);
             }
 
             break;

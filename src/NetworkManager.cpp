@@ -69,6 +69,21 @@ void NetworkManager::becomeClient() {
     Serial.println("Becoming CLIENT");
     role = ROLE_CLIENT;
     myPlayerID = 1;
+
+    // Add host as peer
+    if (hostMac[0] != 0) {
+        esp_now_peer_info_t peerInfo = {};
+        memcpy(peerInfo.peer_addr, hostMac, 6);
+        peerInfo.channel = 0;
+        peerInfo.encrypt = false;
+
+        if (!esp_now_is_peer_exist(hostMac)) {
+            esp_err_t res = esp_now_add_peer(&peerInfo);
+            Serial.printf("[Network] Client added host peer (res=%d)\n", res);
+        }
+    } else {
+        Serial.println("[Network] Warning: hostMac not set when becoming client");
+    }
 }
 
 // Host-only: Broadcast full game state to all clients.
@@ -131,14 +146,29 @@ void NetworkManager::onDataReceive(const uint8_t *mac, const uint8_t *incomingDa
             }
             break;
 
-        case MSG_TYPE_LIFE_CHANGE:
-            // Host receives a life total update from a client
+        // case MSG_TYPE_LIFE_CHANGE:
+        //     // Host receives a life total update from a client
+        //     if (role == ROLE_HOST && len == sizeof(LifeChange)) {
+        //         LifeChange *change = (LifeChange *)incomingData;
+        //         lifeTotals[change->senderID] = change->newLifeTotal;
+        //         sendGameState(); // Sync updated state with all clients
+        //     }
+        //     break;
+
+
+        case MSG_TYPE_LIFE_CHANGE: {
             if (role == ROLE_HOST && len == sizeof(LifeChange)) {
-                LifeChange *change = (LifeChange *)incomingData;
-                lifeTotals[change->senderID] = change->newLifeTotal;
-                sendGameState(); // Sync updated state with all clients
+                LifeChange* change = (LifeChange*)incomingData;
+                Serial.printf("[Network] Host received life change: P%d → %d\n",
+                            change->senderID, change->newLifeTotal);
+
+            gameState.adjustLife(change->senderID, 
+                change->newLifeTotal - gameState.getPlayerState(change->senderID).life);
+
+                sendGameState();
             }
             break;
+        }
 
         case MSG_TYPE_TURN_CHANGE:
             // Host receives a turn-change request and advances the turn
@@ -246,6 +276,17 @@ void NetworkManager::applyPendingGameState() {
 
     hasPendingGameState = false;
 }
+
+void NetworkManager::sendLifeChangeRequest(uint8_t playerId, uint8_t newLifeTotal) {
+    LifeChange change;
+    change.messageType = MSG_TYPE_LIFE_CHANGE;
+    change.senderID = playerId;
+    change.newLifeTotal = newLifeTotal;
+
+    esp_err_t res = esp_now_send(hostMac, (uint8_t*)&change, sizeof(change));
+    Serial.printf("[Network] Sent life update to host: P%d → %d (res=%d)\n", playerId, newLifeTotal, res);
+}
+
 
 // =================================================================================
 //

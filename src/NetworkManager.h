@@ -95,6 +95,7 @@ public:
     bool readyToApplyGameState = false;  // Wait until display is ready
     void markReady();  // Called once display is initialized
     void applyPendingGameState();
+    void sendLifeChangeRequest(uint8_t playerId, uint8_t newLifeTotal);
 
 private:
     uint8_t myPlayerID = 0;                 // Device's assigned player ID
