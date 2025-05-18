@@ -18,6 +18,8 @@ public:
     int getCurrentTurnPlayer() const;
     int getPlayerCount() const;
     void updateRemotePlayer(uint8_t id, const PlayerState& state);
+    bool lifeChanged(uint8_t playerId, int newValue);
+    int getLife(uint8_t playerId) const;
 
 private:
     PlayerState players[4];      // All players' states

@@ -123,3 +123,13 @@ void GameState::adjustLife(uint8_t playerId, int delta) {
     display.renderPlayerState(playerId, p);
     Serial.printf("[GameState] Adjusting life for player %d by %+d. New life: %d\n", playerId, delta, p.life);
 }
+
+bool GameState::lifeChanged(uint8_t playerId, int previousValue) {
+    return previousValue != getLife(playerId);
+}
+
+
+int GameState::getLife(uint8_t playerId) const {
+    if (playerId >= 4) return -1;
+    return players[playerId].life;
+}

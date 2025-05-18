@@ -1,5 +1,6 @@
-#include "NetworkManager.h"
-#include "DisplayManager.h"
+#include "Config.h"
+// #include "NetworkManager.h"
+// #include "DisplayManager.h"
 extern DisplayManager display;
 
 NetworkManager network;
@@ -72,17 +73,19 @@ void NetworkManager::becomeClient() {
 
 // Host-only: Broadcast full game state to all clients.
 void NetworkManager::sendGameState() {
-    if (role == ROLE_HOST) {
-        GameData data = {
-            MSG_TYPE_GAME_STATE,
-            playerCount,
-            currentTurn,
-            {lifeTotals[0], lifeTotals[1], lifeTotals[2], lifeTotals[3]},
-            myPlayerID
-        };
-        esp_now_send(broadcastAddress, (uint8_t *)&data, sizeof(data));
+    GameData data = {};
+    data.messageType = MSG_TYPE_GAME_STATE;
+    data.playerCount = playerCount;
+    data.currentTurn = currentTurn;
+    data.senderID = myPlayerID;
+
+    for (int i = 0; i < 4; ++i) {
+        data.lifeTotal[i] = gameState.getPlayerState(i).life;
     }
+
+    esp_now_send(broadcastAddress, (uint8_t*)&data, sizeof(data));
 }
+
 
 // Client-only: Send new life total to host.
 void NetworkManager::sendLifeUpdate(uint8_t life) {

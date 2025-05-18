@@ -106,6 +106,7 @@ private:
     bool hostDetected = false;              // Flag to indicate if Host was detected during discovery
     unsigned long discoveryStartTime = 0;   // Time when discovery started
     uint8_t hostMac[6] = {0};  // Store the MAC of the detected host
+    
 };
 
 extern NetworkManager network;  // <-- external declaration

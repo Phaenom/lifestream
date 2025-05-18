@@ -30,36 +30,35 @@ void SimulationInputManager::update() {
             break;
 
         case 'w':
-            // Increase poison counter
-            gameState.adjustPoison(selectedPlayer, 1);
-            if (network.getRole() == ROLE_HOST) {
+        case 's': {
+            int delta = (input == 'w') ? 1 : -1;
+            int oldPoison = gameState.getPlayerState(selectedPlayer).poison;
+
+            gameState.adjustPoison(selectedPlayer, delta);
+
+            if (network.getRole() == ROLE_HOST &&
+                gameState.getPlayerState(selectedPlayer).poison != oldPoison) {
                 network.sendGameState();
             }
             break;
-
-        case 's':
-            // Decrease poison counter
-            gameState.adjustPoison(selectedPlayer, -1);
-            if (network.getRole() == ROLE_HOST) {
-                network.sendGameState();
-            }            
-            break;
+}
 
         case 'a':
-            // Simulate left (negative) rotation
-            simulateRotation(-1);
-            if (network.getRole() == ROLE_HOST) {
-                network.sendGameState();
-            }            
-            break;
+        case 'd': {
+            int delta = (input == 'a') ? -1 : 1;
+            simulateRotation(delta);
 
-        case 'd':
-            // Simulate right (positive) rotation
-            simulateRotation(1);
-            if (network.getRole() == ROLE_HOST) {
+            int oldLife = gameState.getLife(selectedPlayer);
+            gameState.adjustLife(selectedPlayer, delta);
+            
+            if (network.getRole() == ROLE_HOST &&
+                gameState.lifeChanged(selectedPlayer, oldLife)) {
                 network.sendGameState();
-            }            
+            }
+
             break;
+        }
+
 
         case 't':
             // Advance turn to next player
@@ -100,11 +99,11 @@ void SimulationInputManager::update() {
             break;
     }
 
-    if (rotationDelta != 0) {
-        Serial.printf("[SimInput] Adjusting life of P%d by %d\n", selectedPlayer, rotationDelta);
-        gameState.adjustLife(selectedPlayer, rotationDelta);
-        rotationDelta = 0;
-    }
+    // if (rotationDelta != 0) {
+    //     Serial.printf("[SimInput] Adjusting life of P%d by %d\n", selectedPlayer, rotationDelta);
+    //     gameState.adjustLife(selectedPlayer, rotationDelta);
+    //     rotationDelta = 0;
+    // }
 }
 
 // Returns the simulated rotation value and clears it.
