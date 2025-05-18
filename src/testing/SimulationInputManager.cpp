@@ -1,6 +1,7 @@
 #include "GameState.h"
 #include "testing/SimulationInputManager.h"
-#include "Config.h"
+#include "DeviceManager.h"
+#include "NetworkManager.h"
 
 // Initializes the simulation input manager.
 // Outputs a startup message to Serial for confirmation.
@@ -36,12 +37,12 @@ void SimulationInputManager::update() {
 
             gameState.adjustPoison(selectedPlayer, delta);
 
-            if (network.getRole() == ROLE_HOST &&
+            if (device.getRole() == ROLE_HOST &&
                 gameState.getPlayerState(selectedPlayer).poison != oldPoison) {
                 network.sendGameState();
             }
 
-            if (network.getRole() == ROLE_CLIENT) {
+            if (device.getRole() == ROLE_CLIENT) {
                 uint8_t newPoison = gameState.getPlayerState(selectedPlayer).poison;
                 network.sendPoisonChangeRequest(selectedPlayer, newPoison);
             }
@@ -56,12 +57,12 @@ void SimulationInputManager::update() {
             int oldLife = gameState.getLife(selectedPlayer);
             gameState.adjustLife(selectedPlayer, delta);
 
-            if (network.getRole() == ROLE_HOST &&
+            if (device.getRole() == ROLE_HOST &&
                 gameState.lifeChanged(selectedPlayer, oldLife)) {
                 network.sendGameState();
             }
 
-            if (network.getRole() == ROLE_CLIENT) {
+            if (device.getRole() == ROLE_CLIENT) {
                 uint8_t newLife = gameState.getLife(selectedPlayer);
                 network.sendLifeChangeRequest(selectedPlayer, newLife);
             }
