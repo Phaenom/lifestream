@@ -4,8 +4,7 @@
 
 #include <Arduino.h>
 #include "InputManager.h"
-
-//InputManager input;
+#include "Config.h"
 
 // Pin connected to rotary encoder output A
 const int ENCODER_PIN_A = 34;
@@ -79,11 +78,13 @@ void InputManager::update() {
 
 // Returns the amount of rotation detected since the last call and resets the delta
 int InputManager::getRotation() const {
-    int delta = rotationDelta;
-    //Serial.printf("[InputManager] getRotation(): %d\n", delta);
-    rotationDelta = 0;
-    return delta;
+    #if SIMULATION_ENABLED
+        return simInput.getRotation();
+    #else
+        return hardware.update_encoder();
+    #endif
 }
+
 
 // Returns true if a short button press was detected since the last call, then clears the flag
 bool InputManager::wasButtonShortPressed() const {

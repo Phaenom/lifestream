@@ -3,6 +3,7 @@
 
 #include <Arduino.h>
 #include "IInputManager.h"
+#include "Config.h"
 
 /**
  * InputManager handles rotary encoder input and button press detection.
