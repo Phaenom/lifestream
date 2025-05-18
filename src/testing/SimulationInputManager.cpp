@@ -1,5 +1,6 @@
 #include "GameState.h"
 #include "testing/SimulationInputManager.h"
+#include "Config.h"
 
 // Initializes the simulation input manager.
 // Outputs a startup message to Serial for confirmation.
@@ -31,21 +32,33 @@ void SimulationInputManager::update() {
         case 'w':
             // Increase poison counter
             gameState.adjustPoison(selectedPlayer, 1);
+            if (network.getRole() == ROLE_HOST) {
+                network.sendGameState();
+            }
             break;
 
         case 's':
             // Decrease poison counter
             gameState.adjustPoison(selectedPlayer, -1);
+            if (network.getRole() == ROLE_HOST) {
+                network.sendGameState();
+            }            
             break;
 
         case 'a':
             // Simulate left (negative) rotation
             simulateRotation(-1);
+            if (network.getRole() == ROLE_HOST) {
+                network.sendGameState();
+            }            
             break;
 
         case 'd':
             // Simulate right (positive) rotation
             simulateRotation(1);
+            if (network.getRole() == ROLE_HOST) {
+                network.sendGameState();
+            }            
             break;
 
         case 't':

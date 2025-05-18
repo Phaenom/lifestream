@@ -89,6 +89,12 @@ public:
     static const char* roleToString(DeviceRole role);
     void heartbeat();  // Called regularly in loop()
     const uint8_t* getHostMAC() const;
+   
+    GameData pendingGameState;
+    bool hasPendingGameState = false;
+    bool readyToApplyGameState = false;  // Wait until display is ready
+    void markReady();  // Called once display is initialized
+    void applyPendingGameState();
 
 private:
     uint8_t myPlayerID = 0;                 // Device's assigned player ID

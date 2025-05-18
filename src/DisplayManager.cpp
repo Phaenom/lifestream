@@ -34,9 +34,9 @@ void DisplayManager::begin() {
     EPD_2IN9_V2_Clear();
 
     // Allocate display buffer and initialize drawing context
-    frameBuffer = (UBYTE*)malloc((EPD_2IN9_V2_WIDTH * EPD_2IN9_V2_HEIGHT) / 8);
-    Paint_NewImage(frameBuffer, EPD_2IN9_V2_WIDTH, EPD_2IN9_V2_HEIGHT, ROTATE_270, WHITE);
-    Paint_SelectImage(frameBuffer);
+    displayBuffer = (UBYTE*)malloc((EPD_2IN9_V2_WIDTH * EPD_2IN9_V2_HEIGHT) / 8);
+    Paint_NewImage(displayBuffer, EPD_2IN9_V2_WIDTH, EPD_2IN9_V2_HEIGHT, ROTATE_270, WHITE);
+    Paint_SelectImage(displayBuffer);
     Paint_Clear(WHITE);
 
     // Bounding boxes for player quadrants with 2-pixel margin for safe padding
@@ -64,7 +64,7 @@ void DisplayManager::begin() {
     Paint_DrawString_EN(0, 115, "P3", &Font12, BLACK, WHITE);           // Bottom-left
     Paint_DrawString_EN(280, 115, "P4", &Font12, BLACK, WHITE);         // Bottom-right
 
-    EPD_2IN9_V2_Display(frameBuffer);
+    EPD_2IN9_V2_Display(displayBuffer);
 
     DEV_Delay_ms(10);
 }
@@ -90,7 +90,7 @@ void DisplayManager::drawTurnMarker(int x, int y) {
     }
     Serial.printf("[Display] Drawing turn marker at (%d, %d), state: %s\n", x, y, toggle ? "BLACK" : "WHITE");
     toggle = !toggle;
-    EPD_2IN9_V2_Display(frameBuffer);
+    EPD_2IN9_V2_Display(displayBuffer);
 }
 
 /**
@@ -98,7 +98,7 @@ void DisplayManager::drawTurnMarker(int x, int y) {
  */
 void DisplayManager::clearTurnMarker(int x, int y) {
     Paint_DrawCircle(x, y, 5, WHITE, DOT_PIXEL_1X1, DRAW_FILL_FULL);
-    EPD_2IN9_V2_Display_Partial(frameBuffer);
+    EPD_2IN9_V2_Display_Partial(displayBuffer);
 }
 
 // Updates the turn indicator for the specified player.
@@ -119,31 +119,51 @@ void DisplayManager::updateTurnIndicator(uint8_t playerId, bool isTurn) {
 // Displays "ELIMINATED" if life is zero or below.
 void DisplayManager::drawLife(uint8_t playerId, int life) {
     static int lastLife[4] = {-1, -1, -1, -1};
+    if (playerId >= 4) return;
     if (lastLife[playerId] == life) return;
     lastLife[playerId] = life;
 
-    if (playerId >= 4) return;
+    // ✅ Check PLAYER_LAYOUT bounds
     const auto& region = PLAYER_LAYOUT[playerId];
-    const char* str;
-    char buf[16];
+
+    // ✅ Handle text formatting
+    const char* str = nullptr;
+    char buf[16] = {0};
     if (life <= 0) {
         str = "ELIMINATED";
     } else {
-        snprintf(buf, sizeof(buf), "%d", life);
-        strcat(buf, " [+]");
+        snprintf(buf, sizeof(buf), "%d [+]", life);
         str = buf;
     }
+
+    // ✅ Protect against nullptr font
+    if (&Font12 == nullptr || str == nullptr) {
+        Serial.println("[Display] Font12 or str is null — skipping draw");
+        return;
+    }
+
+    // ✅ Font-safe calculation
     int textWidth = strlen(str) * Font12.Width;
     int x = region.lifeX - textWidth / 2;
     x = std::max(0, std::min(x, EPD_2IN9_V2_HEIGHT - textWidth));
     int y = std::max(0, std::min(region.lifeY - 8, 128 - 16));
+
+    // ✅ Validate displayBuffer and drawing bounds
+    if (displayBuffer == nullptr) {
+        Serial.println("[Display] displayBuffer is null — skipping partial draw");
+        return;
+    }
+
+    // ✅ Perform draw
     int x2 = std::min(x + 100, EPD_2IN9_V2_HEIGHT);
     int y2 = std::min(y + 20, EPD_2IN9_V2_HEIGHT);
     Paint_ClearWindows(x, y, x2, y2, WHITE);
     Paint_DrawString_EN(x, y, str, &Font12, WHITE, BLACK);
-    //Serial.printf("[Display] Drawing life for P%d: %s\n", playerId + 1, str);
-    EPD_2IN9_V2_Display_Partial(frameBuffer);
+
+    // ✅ Flush only if screen is ready
+    EPD_2IN9_V2_Display_Partial(displayBuffer);
 }
+
 
 // Renders the poison counter for the specified player in their assigned screen region.
 void DisplayManager::drawPoison(uint8_t playerId, int poison) {
@@ -164,7 +184,7 @@ void DisplayManager::drawPoison(uint8_t playerId, int poison) {
     Paint_ClearWindows(x, y, x2, y2, WHITE);
     Paint_DrawString_EN(x, y, buf, &Font12, WHITE, BLACK);
     //Serial.printf("[Display] Drawing poison for P%d: %s\n", playerId + 1, buf);
-    EPD_2IN9_V2_Display_Partial(frameBuffer);
+    EPD_2IN9_V2_Display_Partial(displayBuffer);
 }
 
 /**
@@ -172,6 +192,14 @@ void DisplayManager::drawPoison(uint8_t playerId, int poison) {
  * Combines calls to drawLife, drawPoison, and updateTurnIndicator.
  */
 void DisplayManager::renderPlayerState(uint8_t playerId, const PlayerState& state) {
+    Serial.printf("[Display] Rendering P%d: life=%d, poison=%d, turn=%d\n",
+                  playerId, state.life, state.poison, state.isTurn);
+    
+    if (displayBuffer == nullptr) {
+        Serial.println("[Display] displayBuffer is null!");
+        return;
+    }
+
     if (playerId >= 4) return;
 
 /*     Serial.printf("[Display] Rendering state for P%d — Life: %d, Poison: %d, Turn: %d\n",
@@ -187,16 +215,19 @@ void DisplayManager::renderPlayerState(uint8_t playerId, const PlayerState& stat
     int currentLife = state.eliminated ? 0 : state.life;
 
     if (cachedLife[playerId] != currentLife) {
+        Serial.println("[Display] → drawLife()");
         cachedLife[playerId] = currentLife;
         drawLife(playerId, currentLife);
     }
 
     if (cachedPoison[playerId] != state.poison) {
+        Serial.println("[Display] → drawPoison()");
         cachedPoison[playerId] = state.poison;
         drawPoison(playerId, state.poison);
     }
 
     if (cachedTurn[playerId] != state.isTurn) {
+        Serial.println("[Display] → updateTurnIndicator()");
         updateTurnIndicator(playerId, state.isTurn);
         cachedTurn[playerId] = state.isTurn;
     }
@@ -246,4 +277,17 @@ void DisplayManager::drawDeviceRole() {
     int y = screenHeight - 12;              // 12px font height → y = 116
 
     Paint_DrawString_EN(x, y, roleText, &Font12, BLACK, WHITE);
+}
+
+void DisplayManager::flush() {
+    if (displayBuffer == nullptr) {
+        Serial.println("[Display] flush() skipped — displayBuffer is null");
+        return;
+    }
+
+    EPD_2IN9_V2_Display(displayBuffer);
+}
+
+const UBYTE* DisplayManager::getDisplayBuffer() const {
+    return displayBuffer;
 }

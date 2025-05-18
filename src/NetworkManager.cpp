@@ -1,4 +1,6 @@
 #include "NetworkManager.h"
+#include "DisplayManager.h"
+extern DisplayManager display;
 
 NetworkManager network;
 
@@ -116,14 +118,13 @@ void NetworkManager::onDataReceive(const uint8_t *mac, const uint8_t *incomingDa
             break;
 
         case MSG_TYPE_GAME_STATE:
-            // Client receives game state from host and updates local data
-            if (role == ROLE_CLIENT && len == sizeof(GameData)) {
-                GameData *data = (GameData *)incomingData;
-                playerCount = data->playerCount;
-                currentTurn = data->currentTurn;
-                for (int i = 0; i < 4; i++) {
-                    lifeTotals[i] = data->lifeTotal[i];
-                }
+            if (role == ROLE_CLIENT && len >= sizeof(GameData)) {
+                memcpy(&pendingGameState, incomingData, sizeof(GameData));
+                hasPendingGameState = true;
+                Serial.printf("[Network] Game state buffered: Turn=%d, Life=%d/%d/%d/%d\n",
+                            pendingGameState.currentTurn,
+                            pendingGameState.lifeTotal[0], pendingGameState.lifeTotal[1],
+                            pendingGameState.lifeTotal[2], pendingGameState.lifeTotal[3]);
             }
             break;
 
@@ -207,7 +208,41 @@ const uint8_t* NetworkManager::getHostMAC() const {
     return (role == ROLE_CLIENT) ? hostMac : nullptr;
 }
 
+void NetworkManager::markReady() {
+    readyToApplyGameState = true;
+}
 
+void NetworkManager::applyPendingGameState() {
+    if (!readyToApplyGameState || !hasPendingGameState) return;
+
+    playerCount = pendingGameState.playerCount;
+    currentTurn = pendingGameState.currentTurn;
+    for (int i = 0; i < 4; i++) {
+        lifeTotals[i] = pendingGameState.lifeTotal[i];
+    }
+
+    Serial.println("[Network] Applying pending game state...");
+
+    // ✅ Debug pointer check before using display
+    Serial.printf("[Debug] &display: %p\n", (void*)&display);
+
+    // ✅ Optional: log values being rendered
+    Serial.printf("[Debug] Drawing state: Turn=%d, Life=%d/%d/%d/%d\n",
+                  currentTurn, lifeTotals[0], lifeTotals[1], lifeTotals[2], lifeTotals[3]);
+
+    for (int i = 0; i < 4; ++i) {
+        PlayerState state;
+        state.life = lifeTotals[i];
+        state.poison = 0;
+        state.eliminated = (lifeTotals[i] <= 0);
+        state.isTurn = (i == currentTurn);
+        display.renderPlayerState(i, state);
+    }
+
+    display.flush();  // or display.display() depending on driver
+
+    hasPendingGameState = false;
+}
 
 // =================================================================================
 //

@@ -19,17 +19,19 @@ void setup() {
   Serial.begin(115200);
   Serial.println("\n[Main] Setup starting...");
 
-  network.begin();          // Initialize network system
-  Serial.println("\n[Main] Network initialized");
-
   display.begin();          // Initialize e-paper display
   Serial.println("\n[Main] Display initialized");
 
-  input->begin();           // Initialize input system
-  Serial.println("\n[Main] Input system initialized");
+  network.begin();          // Initialize network system
+  Serial.println("\n[Main] Network initialized");
+
+  network.markReady();  // ✅ tells network it can apply game state now
 
   network.updateRole();     // Check and update device role  
   Serial.printf("\n[Main] Role Assigned: %s\n", NetworkManager::roleToString(network.getRole()));
+
+  input->begin();           // Initialize input system
+  Serial.println("\n[Main] Input system initialized");
 
   gameSetup.begin();        // Initialize game setup  
   Serial.println("\n[Main] Game setup environment prepared");
@@ -47,13 +49,17 @@ void setup() {
     //Serial.printf("[Render] Drawing player %d\n", id);
   }
 
-  EPD_2IN9_V2_Display(display.frameBuffer);
+  EPD_2IN9_V2_Display((UBYTE*)display.getDisplayBuffer());
 }
 
 void loop() {
+  network.updateRole();  // ✅ continue checking until a role is assigned
+  
   input->update();            // Poll and update input state
 
   network.heartbeat();        // broadcast host presence if applicable
+
+  network.applyPendingGameState();
 
   if (input->getRotation() != 0) {
     Serial.print("Rotated: ");
