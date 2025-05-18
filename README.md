@@ -5,7 +5,7 @@
 
 LifeStream is a scalable, battery-friendly multiplayer life tracking system for tabletop games like Magic: The Gathering.
 
-Built on the ESP32 platform using a Waveshare 2.9" V2 ePaper display, rotary encoder input, and ESP-NOW wireless networking.
+Built on the ESP32 platform using a Waveshare 2.9" V2 ePaper display, rotary encoder input (optional), and ESP-NOW wireless networking, LifeStream enables up to 4 players to synchronize life and poison totals in real-time. One device automatically becomes the host; others join as clients. The system is fully usable in both hardware and simulation modes.
 
 ---
 
@@ -40,22 +40,26 @@ ESP32 LifeStream Devices x4
 
 ## Features Overview
 
+## Features Overview
+
+## Features Overview
+
 | Feature                                      | Status  |
 |---------------------------------------------|---------|
-| Player Life Tracking (4 Players)            | ✅       |
-| MTG Themed: Planeswalker Labels             | ✅       |
-| Turn Indicator with Blinking Marker         | ✅       |
-| Dynamic Redraw Optimization                 | ✅       |
-| Serial Simulation Mode                      | ✅       |
-| Full Game Reset & Redraw                    | ✅       |
-| Simulation Input: Life/Poison/Turn          | ✅       |
-| Display Clamping / Bounds Safety            | ✅       |
-| Rotary Encoder Life Adjustment              | 🚧       |
-| Button Press to Cycle Turn                  | 🚧       |
-| ESP-NOW Host/Client Auto Detection          | 🚧       |
-| Multiplayer Life Sync over Wi-Fi            | 🚧       |
-| Battery Level Monitoring                    | ❌       |
-| OTA Updates Support                         | ❌       |
+| 🎮 4-Player Life Tracking                    | ✅       |
+| ☠️ Poison Counter Support                    | ✅       |
+| 🔁 Client-to-Host Sync (Life + Poison)       | ✅       |
+| 🧠 Host Broadcast of Full Game State         | ✅       |
+| 📡 ESP-NOW Role Detection & Arbitration      | ✅       |
+| 🔃 Turn Indicator & Sync                    | ✅       |
+| 🖥️ Dynamic Screen Redraw                     | ✅       |
+| 🎨 Role Display + Turn Highlight             | ✅       |
+| 💬 Serial Simulation Input (Life, Poison)    | ✅       |
+| 🧪 Local Input Simulation (SimInputManager)  | ✅       |
+| 🧱 Clamped Drawing Bounds                    | ✅       |
+| 🔘 Rotary Encoder Support                    | 🚧       |
+| ⏺️ Button Turn Cycling                       | 🚧       |
+| 🔋 Battery Monitoring                        | ❌       |
 
 ---
 
@@ -203,13 +207,15 @@ git clone https://github.com/yourusername/LifeStream.git
 
 ## Future Enhancements (Planned)
 
-- Rotary Encoder Life Adjustment (in progress)
-- Button-driven Turn Cycling (in progress)
-- ESP-NOW Multiplayer Communication
-- OTA Update Support
-- Battery Level Indicator
-- Partial ePaper Refresh
-- Game Mode Variants (EDH, Commander, Win Counters)
+- Rotary Encoder Integration (life adjust + UI navigation)
+- Button Input for Turn Advancement
+- Poison-Based Elimination at ≥10
+- Player Elimination & Overlay Display
+- Dynamic Player ID Assignment & Join Flow
+- Battery Level Monitoring & Icon Overlay
+- OTA Updates & Versioning
+- Game Mode Variants (Commander, EDH, Win Counter)
+- UI Polishing for Startup, Elimination, and Victory States
 
 ---
 
