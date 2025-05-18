@@ -1,62 +1,51 @@
-
 #ifndef INPUT_MANAGER_H
 #define INPUT_MANAGER_H
 
-#include <ESP32Encoder.h>
 #include <Arduino.h>
-#include <ezButton.h>
-//#include "Config.h"
+#include "IInputManager.h"
 
-//#include <Button.h>
-//#include "pitches.h" // how to..l.?
-
-/*
-  InputManager Class (Stub)
-  Designed to handle inputs from Rotary Encoder and Buttons.
-  Currently empty for future expansion.
-*/
-
-class InputManager {
-
-// private:
-	// long oldPosition;
-	// long newPosition;
-
+/**
+ * InputManager handles rotary encoder input and button press detection.
+ * It tracks rotation changes and distinguishes between short and long button presses.
+ */
+class InputManager : public IInputManager {
 public:
-	InputManager(); // Constructor
-	// class parameters
-	
-	// ENCODER STUFF
-	ESP32Encoder encoder;
-	int64_t oldPosition;
-	int64_t newPosition;
-	int64_t delta;
+    /**
+     * Initializes the input manager, setting up necessary hardware or state.
+     * Typically called once during system startup.
+     */
+    void begin() override;
 
-	
-	// ENCODER BUTTON STUFF
-	ezButton encoder_button;
-	int mode;	
+    /**
+     * Updates the input manager state by reading inputs.
+     * Should be called regularly in the main loop.
+     */
+    void update() override;
 
-	// LED BUTTON STUFF
-	//Button led_button;
-	ezButton led_button;
+    /**
+     * Returns the amount of rotation detected since the last update.
+     * Positive or negative values indicate direction.
+     */
+    int getRotation() const override;
 
-	bool isPressed;
-	bool isReleased;
-	bool isLongPress;
-	long pressTime;
-	long pressDuration;
+    /**
+     * Returns true if a short button press was detected since the last update.
+     */
+    bool wasButtonShortPressed() const override;
 
+    /**
+     * Returns true if a long button press was detected since the last update.
+     */
+    bool wasButtonLongPressed() const override;
 
-    // Setup hardware for inputs
-    void begin();//(int DT, int CLK);
-
-    // Update function to read inputs each loop
-    long update_encoder();
-	bool update_button();
-	void set_mode();
-	void reset();
-
+private:
+    mutable int rotationDelta = 0;             // Tracks the change in rotation since last update
+    bool buttonHeld = false;           // Indicates if the button is currently held down
+    unsigned long buttonPressTime = 0; // Timestamp when the button was pressed
+    mutable bool shortPressDetected = false;  // Flag set when a short press is detected
+    mutable bool longPressDetected = false;   // Flag set when a long press is detected
 };
+
+//extern InputManager input;
 
 #endif

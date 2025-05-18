@@ -1,32 +1,45 @@
-
 #ifndef DISPLAY_MANAGER_H
 #define DISPLAY_MANAGER_H
 
-#include <SPI.h>
-#include "DEV_Config.h" //?
-#include "EPD.h"
-#include "GUI_Paint.h"
-#include "assets/mtg_logo_symbol.h"
 #include <Arduino.h>
-#include "NetworkManager.h"
+#include "Config/DEV_Config.h"
+#include "e-Paper/EPD_2in9_V2.h"
+#include "GUI/GUI_Paint.h"
+#include "Fonts/Fonts.h"
+#include "assets/mtg_logo_symbol.h"
+
+// Struct representing a single player's current game state
+struct PlayerState {
+    int life = 20;
+    int poison = 0;
+    bool isTurn = false;
+    bool eliminated = false;
+};
 
 class DisplayManager {
 public:
-    // Initialize the display hardware
-    void begin();
+    DisplayManager();
 
-    // Draw life totals for all players and handle turn indicator
-    void drawLifeCounter(int lifeP1, int lifeP2, int lifeP3, int lifeP4, int currentTurnPlayerID, int myPlayerID, DeviceRole role);
-
-    // Put display into low-power sleep mode
-    void sleep();
-
+    void begin();                                      // Initialize display system
+    void renderPlayerState(uint8_t playerId, const PlayerState& state); // Draw full info for one player
+    void renderAllPlayerStates(const class GameState& state);  // Render all players' states
+    void drawDeviceRole();
+    void flush();  // Push any pending display updates to the screen
+    const UBYTE* getDisplayBuffer() const;  // ✅ Declare the getter here
+    
 private:
-    UBYTE *BlackImage; // Buffer for display image
+    void drawLife(uint8_t playerId, int life);         // Render life total or "ELIMINATED"
+    void drawPoison(uint8_t playerId, int poison);     // Render poison counter
+    void updateTurnIndicator(uint8_t playerId, bool isTurn); // Draw blinking turn indicator
+    void drawTurnMarker(int x, int y);                 // Render blinking circle
+    void clearTurnMarker(int x, int y);                 // Erase the turn marker
+    UBYTE* displayBuffer = nullptr;                      // Display buffer
+    bool toggle = false;                               // Blink state toggle
 
     // Draws the MTG logo at specified (x, y) coordinates
     void drawLogo(int x, int y);
-
 };
 
-#endif
+extern DisplayManager display; // External declaration of DisplayManager instance
+
+#endif // DISPLAY_MANAGER_H

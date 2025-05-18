@@ -1,39 +1,36 @@
-
 #ifndef GAME_STATE_H
 #define GAME_STATE_H
 
-/*
-  GameState Class
-  Responsible for storing and managing player life totals,
-  player turn status, and basic game setup/reset functionality.
-*/
+#include <Arduino.h>
+#include "DisplayManager.h"
 
-// Player data structure
-struct Player {
-    int life;      // Player's current life total
-    bool isTurn;   // Whether it's this player's turn
-};
-
-// GameState Class Definition
 class GameState {
 public:
-    static const int MAX_PLAYERS = 4;  // Maximum number of players supported
-    Player players[MAX_PLAYERS];       // Array to store player data
-    int playerCount;                   // Total number of players
-    int myPlayerID;                    // This device's player ID
+    void begin(int localPlayerId, int startingLife);        // Init with player ID and life
+    void reset();                                           // Reset local player only
+    void resetAll();                                        // Resets all player states (for simulation mode)
+    void adjustLife(uint8_t playerId, int delta);           // Adjust life for any player
+    void adjustPoison(uint8_t playerId, int delta);         // Adjust poison for any player
+    void setTurn(bool active);                              // Local turn state
+    const PlayerState& getPlayerState(uint8_t id) const;    // Get state of any player
+    void nextTurn();
 
-    // Reset function to initialize the game state
-    void reset(int playerCount, int startingLife) {
-        this->playerCount = playerCount;
-        myPlayerID = 0; // Default to player 0 for single device setup
+    int getCurrentTurnPlayer() const;
+    int getPlayerCount() const;
+    void updateRemotePlayer(uint8_t id, const PlayerState& state);
+    bool lifeChanged(uint8_t playerId, int newValue);
+    int getLife(uint8_t playerId) const;
 
-        for (int i = 0; i < playerCount; i++) {
-            players[i].life = startingLife;  // Set starting life
-            players[i].isTurn = false;       // Clear turn status
-        }
+private:
+    PlayerState players[4];      // All players' states
+    int localPlayerId = 0;
+    int startingLife = 20;
+    int currentTurnPlayer = 0;
+    int playerCount = 4;
 
-        players[0].isTurn = true;  // Assign first turn to player 0
-    }
+    void checkElimination();     // Local only
 };
+
+extern GameState gameState; // External declaration of GameState instance
 
 #endif

@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "author": "Wade Casper",
+  "editor": "wokwi",
+  "parts": [
+    {
+      "type": "board-esp32-devkit-c-v4",
+      "id": "ESP",
+      "top": 65,
+      "left": 0,
+      "rotate": 90,
+      "attrs": {}
+    },
+    { "type": "board-epaper-2in9", "id": "EPD", "top": 221.4, "left": 205.68, "attrs": {} },
+    { "type": "wokwi-ky-040", "id": "ENCODER", "top": 40.1, "left": -183.2, "attrs": {} },
+    {
+      "type": "wokwi-led",
+      "id": "LED",
+      "top": 198,
+      "left": 157.4,
+      "attrs": { "color": "limegreen" }
+    }
+  ],
+  "connections": [
+    [ "ESP:TX", "$serialMonitor:RX", "", [] ],
+    [ "ESP:RX", "$serialMonitor:TX", "", [] ],
+    [ "EPD:BUSY", "ESP:4", "cyan", [] ],
+    [ "EPD:CS", "ESP:5", "blue", [] ],
+    [ "EPD:RST", "ESP:16", "yellow", [] ],
+    [ "EPD:DC", "ESP:17", "green", [] ],
+    [ "EPD:CLK", "ESP:18", "purple", [] ],
+    [ "EPD:DIN", "ESP:23", "green", [] ],
+    [ "EPD:GND", "ESP:GND.1", "black", [ "h-288", "v-220.87", "h73.1" ] ],
+    [ "EPD:VCC", "ESP:3V3", "red", [ "h-19.2", "v-250.36" ] ],
+    [ "ENCODER:CLK", "ESP:14", "green", [] ],
+    [ "ENCODER:DT", "ESP:12", "blue", [] ],
+    [ "ENCODER:SW", "ESP:13", "yellow", [] ],
+    [ "ENCODER:VCC", "ESP:3V3", "red", [] ],
+    [ "ENCODER:GND", "ESP:GND.1", "black", [] ],
+    [ "LED:C", "ESP:GND.2", "black", [] ],
+    [ "LED:A", "ESP:22", "cyan", [ "v9.6", "h-99.7" ] ]
+  ],
+  "dependencies": {}
+}

@@ -1,149 +1,102 @@
+// InputManager.cpp
+// This source file implements the InputManager class, which handles rotary encoder input and button press detection.
+// It manages encoder rotation counting via interrupts and distinguishes between short and long button presses.
+
+#include <Arduino.h>
 #include "InputManager.h"
-#include "Config.h"
 
-//#include <ESP32Encoder.h> // https://github.com/madhephaestus/ESP32Encoder.git 
+//InputManager input;
 
+// Pin connected to rotary encoder output A
+const int ENCODER_PIN_A = 34;
+// Pin connected to rotary encoder output B
+const int ENCODER_PIN_B = 35;
+// Pin connected to the push button
+const int BUTTON_PIN    = 32;
 
-//DisplayManager::begin
+// Volatile variable to store the encoder position updated in ISR
+volatile int encoderPosition = 0;
 
-// InputManager::InputManager(){
-
-	//button_arcade = 
-// }
-
-InputManager::InputManager():
-	led_button(EPD_BUTTON),
-	encoder_button(EPD_BUTTON_ENCODER),
-	encoder() 
-	{
-	// Constructor
-	// change = 0;
-	// oldPosition = 0;
-	// newPosition = 0;
-	// pressDuration = 0;
-	// mode = 0; // future
-
-	// ROTARY ENCODER SETUP
-	encoder.attachHalfQuad( EPD_DT, EPD_CLK ); 	//attachFullQuad option available
-	//encoder.attachFullQuad( EPD_DT, EPD_CLK ); 	//attachFullQuad option available
-	encoder.clearCount(); // reset encoder count to 0
-
-	oldPosition = 0; // initial position
-	newPosition = 0;
-	delta = 0;
-
-	isPressed = false;
-	// isLongPress = false;
-	// pressTime = 0;
+// Interrupt Service Routine to handle encoder rotation changes
+// Increments or decrements encoderPosition based on the state of encoder pins
+void IRAM_ATTR encoderISR() {
+    int a = digitalRead(ENCODER_PIN_A);
+    int b = digitalRead(ENCODER_PIN_B);
+    encoderPosition += (a == b) ? 1 : -1;
 }
 
-void InputManager::begin(){
-	//(int DT, int CLK) {
-		
-	//encoder.setCount( 20*2 ); // replace with lifecount?
+void InputManager::begin() {
+    // Configure encoder pins as input with pull-up resistors
+    pinMode(ENCODER_PIN_A, INPUT_PULLUP);
+    pinMode(ENCODER_PIN_B, INPUT_PULLUP);
+    // Configure button pin as input with pull-up resistor
+    pinMode(BUTTON_PIN,    INPUT_PULLUP);
 
-	// THIS SHOULDNT DO ANYTHING SINCE I AM USING DELTA
-	encoder.setCount(40); // set initial count to 40 (20 life * 2 for encoder)
-	oldPosition = encoder.getCount()/ 2; // set old position to initial count divided by 2
-	
-	led_button.setDebounceTime(50); // Set debounce time to 50ms
-	encoder_button.setDebounceTime(50); // Set debounce time to 50ms
+    // Attach interrupt to encoder pin A to detect changes and call encoderISR
+    attachInterrupt(digitalPinToInterrupt(ENCODER_PIN_A), encoderISR, CHANGE);
 
-	//oldPosition = encoder.getCount() / 2;
-	//newPosition = oldPosition;
-	//change = 0;
-
-	//mode = 0;
-	
-	// encoder button input
-	//encoder_button 
-	
-	//ESP32Encoder::useInternalWeakPullResistors = puType::up;
-	//encoder.setFilter(1023);
-	//ezButton led_button(EPD_BUTTON); // Set the pin for the button
-	//Button led_button(EPD_BUTTON); // Set the pin for the button
-	//led_button.setLongPressTime(2000); // Set long press time to 1000ms
-	//led_button.setPinMode(INPUT_PULLUP); // Set pin mode to INPUT_PULLUP
-
-	//encoder_button.setPinMode(INPUT_PULLUP); // Set pin mode to INPUT_PULLUP
-	//encoder_button.setPin(EPD_BUTTON); // Set the pin for the button	
-	
-
-	// LED BUTTON SET UP
-
+    Serial.println("[InputManager] Hardware input initialized (encoder + button)");
 }
 
-// Update function to read inputs each loop
-long InputManager::update_encoder() {
-	// Future implementation
+void InputManager::update() {
+    noInterrupts();
+    rotationDelta = encoderPosition;
+    encoderPosition = 0;
+    interrupts();
 
-	newPosition = encoder.getCount()/ 2;
-	//newPosition = encoder.getCount();
-	delta = newPosition - oldPosition; // calculate delta
-	// if (newPosition != oldPosition) {
-	if (delta != 0) {
-		//change = newPosition - oldPosition;
-		oldPosition = newPosition;
+    //Serial.printf("[InputManager] Rotation delta: %d\n", rotationDelta);
 
-		// Serial.print("encoder pos: ");
-		// Serial.println(newPosition); // Debug output to monitor life changes
-	}
-//	Serial.println(encoder.getCount()/2); // Debug output to monitor life changes
+    // Static variable to remember last button state across calls
+    static bool lastButton = HIGH;
+    // Read current button state
+    bool currentButton = digitalRead(BUTTON_PIN);
+    // Get current time in milliseconds
+    unsigned long now = millis();
 
-	// change = 0;
-	// if (newPosition != oldPosition) {
-	// 	change = newPosition - oldPosition;
-	// 	oldPosition = newPosition;
-	// }
-	// Serial.print("encoder change: ");
-	// Serial.println(change); // Debug output to monitor life changes
+    // Detect button press (transition from HIGH to LOW)
+    if (currentButton == LOW && lastButton == HIGH) {
+        buttonPressTime = now;  // Record time when button was pressed
+        buttonHeld = true;
+        Serial.println("[InputManager] Button pressed.");
+    }
 
-	//change = 1; // debug
-	//return newPosition;
-	return delta;
-	//return newPosition;
+    // Detect button release (transition from LOW to HIGH)
+    if (currentButton == HIGH && lastButton == LOW) {
+        unsigned long pressTime = now - buttonPressTime;  // Calculate press duration
+        if (pressTime >= 1000) {
+            longPressDetected = true;  // Long press if held >= 1000 ms
+            Serial.printf("[InputManager] Button released after %lu ms (long press)\n", pressTime);
+        } else {
+            shortPressDetected = true;                   // Otherwise, short press
+            Serial.printf("[InputManager] Button released after %lu ms (short press)\n", pressTime);
+        }
+        buttonHeld = false;
+    }
 
-// Do I want to report encoder count or delta count to game state?
-// risks either way?
-
+    // Update last button state for next update cycle
+    lastButton = currentButton;
 }
 
-// long InputManager::update_encoder() {
-// 	return encoder.getCount()/2; // return encoder count divided by 2
-// }
-
-
-bool InputManager::update_button() {
-	// Check if the button is pressed 
-	//isPressed = encoder_button.isReleased();
-
-	// updates button state
-	led_button.loop();
-	encoder_button.loop();
-
-	// don't really need this. just use *.isReleased()
-	// maybe for long presses?
-	
-	// isPressed = false; 
-	// // if (led_button.isReleased() || encoder_button.isReleased()){
-	// if (led_button.isPressed() || encoder_button.isPressed()){		
-	// 	isPressed = true; 
-	// }
-	// return isPressed;
-
-	isReleased = false; 
-	// if (led_button.isReleased() || encoder_button.isReleased()){
-	if (led_button.isReleased() || encoder_button.isReleased()){		
-		isReleased = true; 
-	}
-	return isReleased;
-	// return isPressed;
+// Returns the amount of rotation detected since the last call and resets the delta
+int InputManager::getRotation() const {
+    int delta = rotationDelta;
+    //Serial.printf("[InputManager] getRotation(): %d\n", delta);
+    rotationDelta = 0;
+    return delta;
 }
 
-void InputManager::set_mode(){
-	mode = 0; // future - to rotate between HP and PSN
+// Returns true if a short button press was detected since the last call, then clears the flag
+bool InputManager::wasButtonShortPressed() const {
+    bool result = shortPressDetected;
+    if (result) Serial.println("[InputManager] Detected short press event");
+    shortPressDetected = false;
+    return result;
 }
 
-void InputManager::reset(){
-	encoder.clearCount();
+// Returns true if a long button press was detected since the last call, then clears the flag
+bool InputManager::wasButtonLongPressed() const {
+    bool result = longPressDetected;
+    if (result) Serial.println("[InputManager] Detected long press event");
+    longPressDetected = false;
+    return result;
 }
