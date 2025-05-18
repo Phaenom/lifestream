@@ -29,7 +29,7 @@ void setup() {
 
   network.markReady();  // Notify that network can apply incoming game state
   network.updateRole(); // Determine and assign device role (host/client)
-  Serial.printf("[Main] Role Assigned: %s\n", NetworkManager::roleToString(network.getRole()));
+  Serial.printf("[Main] Role Assigned: %s\n", DeviceManager::roleToString(device.getRole()));
 
   // --- Initialize Input ---
   input->begin();
@@ -40,12 +40,12 @@ void setup() {
   Serial.println("[Main] Game setup environment prepared");
 
   network.sendGameState();  // If host, broadcast game setup to all devices
-  if (network.getRole() == ROLE_CLIENT) {
+  if (device.getRole() == ROLE_CLIENT) {
     Serial.println("[Main] Setup received from host");
   }
 
   // --- Initialize Game State ---
-  gameState.begin(device.getPlayerId(), gameSetup.getStartingLife());
+  gameState.begin(device.getPlayerID(), gameSetup.getStartingLife());
 
   // --- Initial Render of All Players ---
   for (int id = 0; id < gameSetup.getPlayerCount(); ++id) {

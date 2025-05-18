@@ -242,7 +242,7 @@ void DisplayManager::drawLogo(int x, int y) {
 
 void DisplayManager::drawDeviceRole() {
     const char* roleText = "";
-    switch (network.getRole()) {
+    switch (device.getRole()) {
         case ROLE_HOST:
             roleText = "HOST";
             break;

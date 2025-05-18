@@ -1,10 +1,13 @@
-#include "Config.h"
-extern DisplayManager display;
+#include "NetworkManager.h"
+#include "DeviceManager.h"
+#include "GameState.h"
+#include "GameSetup.h"
+
+//extern DisplayManager display;
 
 NetworkManager network;
 
-// Global broadcast address for ESP-NOW
-uint8_t broadcastAddress[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+uint8_t broadcastAddress[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
 // Initialize ESP-NOW at a low level
 void NetworkManager::setupESPNow() {
@@ -30,52 +33,14 @@ void NetworkManager::begin() {
 
 // Determine device role; become host if no host detected after timeout
 void NetworkManager::updateRole() {
-    if (role != ROLE_UNDEFINED) return;  // Role already assigned
+    if (device.role != ROLE_UNDEFINED) return;  // Role already assigned
 
     // Wait for host announcements or timeout to become host
     unsigned long now = millis();
     if (!hostDetected && now - discoveryStartTime > 5000) {
-        becomeHost();
+        device.becomeHost();
     } else if (hostDetected && now - discoveryStartTime > 1000) {
-        becomeClient();
-    }
-}
-
-// Promote device to Host role; assign Player ID 0 and add broadcast peer
-void NetworkManager::becomeHost() {
-    Serial.println("\nBecoming HOST");
-    role = ROLE_HOST;
-    myPlayerID = 0; // Convention: host is always Player 0
-
-    esp_now_peer_info_t peerInfo = {};
-    memcpy(peerInfo.peer_addr, broadcastAddress, 6);
-    peerInfo.channel = 0;
-    peerInfo.encrypt = false;
-
-    if (esp_now_add_peer(&peerInfo) != ESP_OK) {
-        Serial.println("Failed to add broadcast peer");
-    }
-}
-
-// Promote device to Client role; assign Player ID 1 (static for now)
-void NetworkManager::becomeClient() {
-    Serial.println("Becoming CLIENT");
-    role = ROLE_CLIENT;
-    myPlayerID = 1;
-
-    // Add host as peer if MAC known
-    if (hostMac[0] != 0) {
-        esp_now_peer_info_t peerInfo = {};
-        memcpy(peerInfo.peer_addr, hostMac, 6);
-        peerInfo.channel = 0;
-        peerInfo.encrypt = false;
-
-        if (!esp_now_is_peer_exist(hostMac)) {
-            esp_err_t res = esp_now_add_peer(&peerInfo);
-            Serial.printf("[Network] Client added host peer (res=%d)\n", res);
-        }
-    } else {
-        Serial.println("[Network] Warning: hostMac not set when becoming client");
+        device.becomeClient();
     }
 }
 
@@ -85,7 +50,7 @@ void NetworkManager::sendGameState() {
     data.messageType = MSG_TYPE_GAME_STATE;
     data.playerCount = playerCount;
     data.currentTurn = currentTurn;
-    data.senderID = myPlayerID;
+    data.senderID = device.myPlayerID;
 
     for (int i = 0; i < 4; ++i) {
         data.lifeTotal[i] = gameState.getPlayerState(i).life;
@@ -95,19 +60,18 @@ void NetworkManager::sendGameState() {
     esp_now_send(broadcastAddress, (uint8_t*)&data, sizeof(data));
 }
 
-
 // Client: Send new life total to host
 void NetworkManager::sendLifeUpdate(uint8_t life) {
-    if (role == ROLE_CLIENT) {
-        LifeChange change = {MSG_TYPE_LIFE_CHANGE, myPlayerID, life};
+    if (device.role == ROLE_CLIENT) {
+        LifeChange change = {MSG_TYPE_LIFE_CHANGE, device.myPlayerID, life};
         esp_now_send(broadcastAddress, (uint8_t *)&change, sizeof(change));
     }
 }
 
 // Client: Request to pass the turn to next player
 void NetworkManager::sendTurnChange() {
-    if (role == ROLE_CLIENT) {
-        TurnChange change = {MSG_TYPE_TURN_CHANGE, myPlayerID};
+    if (device.role == ROLE_CLIENT) {
+        TurnChange change = {MSG_TYPE_TURN_CHANGE, device.myPlayerID};
         esp_now_send(broadcastAddress, (uint8_t *)&change, sizeof(change));
     }
 }
@@ -119,7 +83,7 @@ void NetworkManager::onDataReceive(const uint8_t *mac, const uint8_t *incomingDa
 
     switch (messageType) {
         case MSG_TYPE_HOST_ANNOUNCE:
-            if (role == ROLE_UNDEFINED) {
+            if (device.role == ROLE_UNDEFINED) {
                 Serial.println("[Network] Host Announce Received!");
             }
             hostDetected = true;
@@ -129,7 +93,7 @@ void NetworkManager::onDataReceive(const uint8_t *mac, const uint8_t *incomingDa
             break;
 
         case MSG_TYPE_GAME_STATE:
-            if (role == ROLE_CLIENT && len >= sizeof(GameData)) {
+            if (device.role == ROLE_CLIENT && len >= sizeof(GameData)) {
                 memcpy(&pendingGameState, incomingData, sizeof(GameData));
                 hasPendingGameState = true;
                 Serial.printf("[Network] Game state buffered: Turn=%d, Life=%d/%d/%d/%d\n",
@@ -140,7 +104,7 @@ void NetworkManager::onDataReceive(const uint8_t *mac, const uint8_t *incomingDa
             break;
 
         case MSG_TYPE_LIFE_CHANGE: {
-            if (role == ROLE_HOST && len == sizeof(LifeChange)) {
+            if (device.role == ROLE_HOST && len == sizeof(LifeChange)) {
                 LifeChange* change = (LifeChange*)incomingData;
                 Serial.printf("[Network] Host received life change: P%d → %d\n",
                             change->senderID, change->newLifeTotal);
@@ -154,13 +118,13 @@ void NetworkManager::onDataReceive(const uint8_t *mac, const uint8_t *incomingDa
 
         case MSG_TYPE_TURN_CHANGE:
             // Host: advance turn on turn-change request
-            if (role == ROLE_HOST && len == sizeof(TurnChange)) {
+            if (device.role == ROLE_HOST && len == sizeof(TurnChange)) {
                 currentTurn = (currentTurn + 1) % playerCount;
                 sendGameState();
             }
             break;
         case MSG_TYPE_POISON_CHANGE: {
-            if (role == ROLE_HOST && len == sizeof(PoisonChange)) {
+            if (device.role == ROLE_HOST && len == sizeof(PoisonChange)) {
                 PoisonChange* change = (PoisonChange*)incomingData;
                 Serial.printf("[Network] Host received poison change: P%d → %d\n",
                             change->senderID, change->newPoison);
@@ -175,32 +139,13 @@ void NetworkManager::onDataReceive(const uint8_t *mac, const uint8_t *incomingDa
     }
 }
 
-// Return current device role
-DeviceRole NetworkManager::getRole() {
-    return role;
-}
-
-// Return current player ID
-uint8_t NetworkManager::getPlayerID() {
-    return myPlayerID;
-}
-
-const char* NetworkManager::roleToString(DeviceRole role) {
-    switch (role) {
-        case ROLE_HOST: return "🧠 Host";
-        case ROLE_CLIENT: return "🎮 Client";
-        case ROLE_UNDEFINED: return "❓ Undefined";
-        default: return "🚫 Unknown";
-    }
-}
-
 void NetworkManager::heartbeat() {
     static unsigned long lastAnnounce = 0;
     static unsigned long lastHeartbeat = 0;
     unsigned long now = millis();
 
     // Host: broadcast presence every second
-    if (role == ROLE_HOST && now - lastAnnounce > 1000) {
+    if (device.role == ROLE_HOST && now - lastAnnounce > 1000) {
         HostAnnounce announce = { MSG_TYPE_HOST_ANNOUNCE };
         esp_now_send(broadcastAddress, (uint8_t*)&announce, sizeof(announce));
         lastAnnounce = now;
@@ -212,8 +157,8 @@ void NetworkManager::heartbeat() {
         esp_read_mac(localMac, ESP_MAC_WIFI_STA);
 
         Serial.println("\n[Loop] Network Heartbeat");
-        Serial.printf(" - Player ID : %d\n", getPlayerID());
-        Serial.printf(" - Role      : %s\n", roleToString(getRole()));
+        Serial.printf(" - Player ID : %d\n", device.getPlayerID());
+        Serial.printf(" - Role      : %s\n", device.roleToString(device.getRole()));
         Serial.printf(" - MAC Addr  : %02X:%02X:%02X:%02X:%02X:%02X\n",
                       localMac[0], localMac[1], localMac[2],
                       localMac[3], localMac[4], localMac[5]);
@@ -222,7 +167,7 @@ void NetworkManager::heartbeat() {
         esp_now_get_peer_num(&peerCount);
         Serial.printf(" - ESP-NOW Peers: %d\n", peerCount.total_num);
 
-        if (role == ROLE_CLIENT && hostMac[0] != 0) {
+        if (device.role == ROLE_CLIENT && hostMac[0] != 0) {
             Serial.printf(" - Host MAC  : %02X:%02X:%02X:%02X:%02X:%02X\n",
                           hostMac[0], hostMac[1], hostMac[2],
                           hostMac[3], hostMac[4], hostMac[5]);
@@ -233,7 +178,7 @@ void NetworkManager::heartbeat() {
 }
 
 const uint8_t* NetworkManager::getHostMAC() const {
-    return (role == ROLE_CLIENT) ? hostMac : nullptr;
+    return (device.role == ROLE_CLIENT) ? hostMac : nullptr;
 }
 
 void NetworkManager::markReady() {

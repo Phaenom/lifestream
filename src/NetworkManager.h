@@ -5,18 +5,8 @@
 #include <esp_now.h>
 #include <WiFi.h>
 
-// =================================================================================
-//
-// ENUM DEFINITIONS
-//
-// =================================================================================
-
-// Device roles in the networked game.
-enum DeviceRole {
-    ROLE_UNDEFINED, // Role not yet determined
-    ROLE_HOST,      // Acts as Host
-    ROLE_CLIENT     // Acts as Client
-};
+// Global broadcast address for ESP-NOW
+extern uint8_t broadcastAddress[6];
 
 // =================================================================================
 //
@@ -81,8 +71,6 @@ class NetworkManager {
 public:
     void begin();                           // Initialize networking and start discovery
     void updateRole();                      // Called regularly from loop()
-    DeviceRole getRole();                   // Returns current device role
-    uint8_t getPlayerID();                  // Returns assigned player ID
 
     void sendLifeUpdate(uint8_t life);     // Client requests life change
     void sendTurnChange();                  // Client requests turn change
@@ -94,9 +82,6 @@ public:
     uint8_t playerCount = 4;
     uint8_t currentTurn = 0;
     uint8_t lifeTotals[4] = {20, 20, 20, 20};
-    DeviceRole role = ROLE_UNDEFINED;       // Current device role
-
-    static const char* roleToString(DeviceRole role);
 
     void heartbeat();                       // Called regularly in loop()
     const uint8_t* getHostMAC() const;
@@ -112,18 +97,15 @@ public:
     void sendLifeChangeRequest(uint8_t playerId, uint8_t newLifeTotal);
     void sendPoisonChangeRequest(uint8_t playerId, uint8_t newPoison);
 
+    uint8_t hostMac[6] = {0};               // MAC address of detected Host
+
 private:
-    uint8_t myPlayerID = 0;                 // Assigned player ID
-
     void setupESPNow();                     // Initialize ESP-NOW
-    void becomeHost();                      // Set device as Host
-    void becomeClient();                    // Set device as Client
-
     bool hostDetected = false;              // Indicates if Host was detected during discovery
     unsigned long discoveryStartTime = 0;  // Discovery start time
-    uint8_t hostMac[6] = {0};               // MAC address of detected Host
 };
 
-extern NetworkManager network;  // External declaration
+// Global instance of the device manager
+extern NetworkManager network;
 
 #endif

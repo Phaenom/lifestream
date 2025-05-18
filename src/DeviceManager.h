@@ -3,27 +3,49 @@
 
 #include <Arduino.h>
 
+// =================================================================================
+//
+// ENUM DEFINITIONS
+//
+// =================================================================================
+
+// Device roles in the networked game.
+enum DeviceRole {
+    ROLE_UNDEFINED, // Role not yet determined
+    ROLE_HOST,      // Acts as Host
+    ROLE_CLIENT     // Acts as Client
+};
+
+// =================================================================================
+//
+// DEVICE MANAGER CLASS
+//
+// =================================================================================
+
 class DeviceManager {
 public:
-    // Initialize device role state
-    void begin();
+    // DeviceManager handles all role-related identity for this device.
+    // This includes role, player ID, and host/client transitions.
 
-    // Assign this device as the host
-    void assumeHostRole();
-    // Assign this device as a player with a specific ID
-    void assumePlayerRole(uint8_t id);
+    void begin();                         // Initialize device state
 
-    // Returns true if this device is the host
-    bool isHost() const;
-    // Returns the assigned player ID
-    uint8_t getPlayerId() const;
+    void setAsHost();                     // Assign this device as host
+    void setPlayerID(uint8_t id);         // Assign this device a player ID
 
-    // Manually set host status (used during role transition)
-    void setIsHost(bool value);
+    bool isHost() const;                  // True if acting as host
+    uint8_t getPlayerID() const;          // Get assigned player ID
 
-private:
-    bool host = false;                // True if device is acting as host
-    uint8_t playerId = 0;             // Assigned player ID (range: 0–3)
+    DeviceRole getRole() const;           // Get current role
+    static const char* roleToString(DeviceRole role);
+
+    void becomeHost();                    // Host transition logic
+    void becomeClient();                  // Client transition logic
+
+    DeviceRole role = ROLE_UNDEFINED;       // Current device role
+    uint8_t myPlayerID = 0;
+
+    private:
+                   // Assigned player ID
     unsigned long lastUpdateTime = 0; // Last activity timestamp (reserved for future use)
 };
 
