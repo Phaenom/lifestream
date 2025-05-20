@@ -1,5 +1,10 @@
 // Main entry point for LifeStream, responsible for initializing system modules and running the main loop.
-#include "Config.h"
+//#include "Config.h"
+#include "DeviceManager.h"
+#include "NetworkManager.h"
+#include "DisplayManager.h"
+#include "GameSetup.h"
+#include "GameState.h"
 
 #ifdef SIMULATION_MODE
 //#warning SIMULATION_MODE is enabled
@@ -61,29 +66,6 @@ void loop() {
   input->update();             // Poll input from encoder and button
   network.heartbeat();         // If host, broadcast heartbeat
   network.applyPendingGameState(); // Sync any incoming game state updates
-
-  // --- Handle Rotation ---
-  if (input->getRotation() != 0) {
-    Serial.print("[Input] Rotation: ");
-    Serial.println(input->getRotation());
-    // TODO: Apply rotation to life total and broadcast change
-  }
-
-  // --- Handle Button Press ---
-  if (input->wasButtonShortPressed()) {
-    Serial.println("[Input] Short press detected");
-    // TODO: Trigger action based on button short press (e.g., toggle poison)
-  }
-
-  /*
-  // TODO: Implement turn advance logic
-  if (input->wasButtonLongPressed()) {
-    Serial.println("[Input] Long press detected");
-    if (gameState.getPlayerState(device.getPlayerId()).isTurn) {
-      network.sendTurnAdvanceRequest(device.getPlayerId());
-    }
-  }
-  */
 
   delay(10); // Debounce + lower CPU usage
 }

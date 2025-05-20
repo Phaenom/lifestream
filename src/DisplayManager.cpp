@@ -1,10 +1,8 @@
-// DisplayManager.cpp
-// Responsible for rendering player state to the e-paper display
-// Includes life totals, poison counters, and turn indicators
-
-#include <algorithm>
+//#include <algorithm>
 #include "DisplayManager.h"
-#include "Config.h"
+#include "GameState.h"
+#include "DeviceManager.h"
+#include "NetworkManager.h"
 
 DisplayManager display;
 

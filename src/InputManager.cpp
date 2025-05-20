@@ -5,6 +5,7 @@
 #include <Arduino.h>
 #include "InputManager.h"
 #include "Config.h"
+#include "HardwareManager.h"
 
 // Pin connected to rotary encoder output A
 const int ENCODER_PIN_A = 34;
