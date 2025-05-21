@@ -1,4 +1,4 @@
-#include "OutputManager.h"
+/* #include "OutputManager.h"
 #include "Config.h"
 
 
@@ -55,3 +55,4 @@ void OutputManager::reset(){
     //tone(EPD_BUZZ, 100, 100); // Set the buzzer to a frequency of 440Hz for 100ms
 
 }
+ */

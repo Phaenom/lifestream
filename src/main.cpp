@@ -6,6 +6,7 @@
 #include "GameSetup.h"
 #include "GameState.h"
 #include "Config.h"
+#include "IInputManager.h"
 
 #ifdef SIMULATION_MODE
 //#warning SIMULATION_MODE is enabled
@@ -13,8 +14,12 @@
 SimulationInputManager simInput;
 IInputManager* input = &simInput;
 #else
-#include "InputManager.h"
-InputManager hwInput;
+// #include "InputManager.h"
+// InputManager hwInput;
+// IInputManager* input = &hwInput;
+
+#include "HardwareManager.h"
+HardwareManager hwInput;
 IInputManager* input = &hwInput;
 #endif
 
@@ -40,8 +45,9 @@ void setup() {
   Serial.printf("[Main] Role Assigned: %s\n", DeviceManager::roleToString(device.getRole()));
 
   // --- Initialize Input ---
-  input->begin();
-  Serial.println("[Main] Input system initialized");
+  // input->begin();
+  // Serial.println("[Main] Input system initialized");
+  hardware.begin();
 
   // --- Game Setup ---
   gameSetup.begin();        
@@ -67,7 +73,8 @@ void setup() {
 void loop() {
   network.updateRole();        // Continue checking for valid host/client role
 
-  input->update();             // Poll input from encoder and button
+  //input->update();             // Poll input from encoder and button
+  hardware.update();
   network.heartbeat();         // If host, broadcast heartbeat
   network.applyPendingGameState(); // Sync any incoming game state updates
 

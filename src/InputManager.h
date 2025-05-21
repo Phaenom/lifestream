@@ -27,17 +27,17 @@ public:
      * Returns the net rotation delta since last read.
      * Positive or negative values indicate direction.
      */
-    int getRotation() const override;
+    // int getRotation() const override;
 
     /**
      * Returns true if a short button press occurred since the last read.
      */
-    bool wasButtonShortPressed() const override;
+    // bool wasButtonShortPressed() const override;
 
     /**
      * Returns true if a long button press occurred since the last read.
      */
-    bool wasButtonLongPressed() const override;
+    // bool wasButtonLongPressed() const override;
 
 private:
     mutable int rotationDelta = 0;              // Accumulated rotation since last update

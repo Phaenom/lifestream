@@ -119,26 +119,26 @@ void SimulationInputManager::update() {
 }
 
 // Returns the simulated rotation value and clears it.
-int SimulationInputManager::getRotation() const {
+/* int SimulationInputManager::getRotation() const {
     int delta = rotationDelta;
     // LOGF("[SimInput] getRotation: returning %d\n", delta);
     rotationDelta = 0;
     return delta;
-}
+} */
 
 // Returns and clears the simulated short/long press state.
-bool SimulationInputManager::wasButtonShortPressed() const {
+/* bool SimulationInputManager::wasButtonShortPressed() const {
     bool result = shortPressDetected;
     shortPressDetected = false;
     return result;
-}
+} */
 
 // Returns and clears the simulated short/long press state.
-bool SimulationInputManager::wasButtonLongPressed() const {
+/* bool SimulationInputManager::wasButtonLongPressed() const {
     bool result = longPressDetected;
     longPressDetected = false;
     return result;
-}
+} */
 
 // Increments the internal rotation delta and logs the change.
 void SimulationInputManager::simulateRotation(int delta) {

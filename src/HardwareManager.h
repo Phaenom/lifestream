@@ -10,6 +10,7 @@
 #include <ESP32Encoder.h>
 #include <Arduino.h>
 #include <ezButton.h>
+#include "IInputManager.h"
 //# include "Config.h"
 
 /*
@@ -18,7 +19,7 @@
   Designed to handle inputs from Rotary Encoder and Buttons.
 */
 
-class HardwareManager {
+class HardwareManager : public IInputManager {
 
 public:
     HardwareManager(); // Constructor
@@ -45,15 +46,15 @@ public:
     int mode; // game manager / network manager handles?
 
     // SETUP FUNCTIONS
-    void begin();
-    void update(); // Update function to read inputs each loop
+    void begin() override;
+    void update() override; // Update function to read inputs each loop
 
     // Update function to read inputs each loop
-    long update_encoder();
+    long update_encoder() override;
     //bool update_button();
 
-    bool get_encoder_button(); // rename button names?
-    bool get_arcade_button();
+    bool get_encoder_button() override; // rename button names?
+    bool get_arcade_button() override;
 
     //void set_mode();
     void reset();

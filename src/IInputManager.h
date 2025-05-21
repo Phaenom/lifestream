@@ -13,13 +13,13 @@ public:
     virtual void update() = 0;
 
     // Get the current rotation input value.
-    virtual int getRotation() const = 0;
+    virtual long update_encoder();
 
     // Check if the input button was short pressed.
-    virtual bool wasButtonShortPressed() const = 0;
+    virtual bool get_encoder_button();
 
     // Check if the input button was long pressed.
-    virtual bool wasButtonLongPressed() const = 0;
+    virtual bool get_arcade_button();
 
     virtual ~IInputManager() {}
 };

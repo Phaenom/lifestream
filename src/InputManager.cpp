@@ -76,26 +76,26 @@ void InputManager::update() {
 }
 
 // Returns the amount of rotation detected since the last call and resets the delta
-int InputManager::getRotation() const {
+/* int InputManager::getRotation() const {
     #if SIMULATION_ENABLED
         return simInput.getRotation();
     #else
         return hardware.update_encoder();
     #endif
-}
+} */
 
 // Returns true if a short button press was detected since the last call, then clears the flag
-bool InputManager::wasButtonShortPressed() const {
+/* bool InputManager::wasButtonShortPressed() const {
     bool result = shortPressDetected;
     if (result) LOGLN("[InputManager] Detected short press event");
     shortPressDetected = false;
     return result;
-}
+} */
 
 // Returns true if a long button press was detected since the last call, then clears the flag
-bool InputManager::wasButtonLongPressed() const {
+/* bool InputManager::wasButtonLongPressed() const {
     bool result = longPressDetected;
     if (result) LOGLN("[InputManager] Detected long press event");
     longPressDetected = false;
     return result;
-}
+} */

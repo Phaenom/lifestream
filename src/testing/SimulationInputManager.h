@@ -8,9 +8,9 @@ class SimulationInputManager : public IInputManager {
 public:
     void begin() override;
     void update() override;
-    int getRotation() const override;
+/*     int getRotation() const override;
     bool wasButtonShortPressed() const override;
-    bool wasButtonLongPressed() const override;
+    bool wasButtonLongPressed() const override; */
 
     void simulateRotation(int delta);
     void simulateButtonPress(bool held);
