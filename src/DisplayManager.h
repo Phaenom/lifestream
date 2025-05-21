@@ -34,7 +34,6 @@ private:
     void drawTurnMarker(int x, int y);                      // Draw the circular turn marker
     void clearTurnMarker(int x, int y);                     // Erase turn marker
     void drawLogo(int x, int y);                            // Draw MTG logo at given coordinates
-
     UBYTE* displayBuffer = nullptr;                         // Display memory buffer
     bool toggle = false;                                    // Blink state toggle
 };

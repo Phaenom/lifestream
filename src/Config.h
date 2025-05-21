@@ -8,24 +8,7 @@
 // Set to 1 to enable debug logs and serial UART
 // Set to 0 for power-optimized release mode
 // =====================================================
-#define ENABLE_DEBUG 0
-
-// =================================================================================
-//
-// HEADER FILE INCLUDES
-//
-// =================================================================================
-
-/* #include "NetworkManager.h"
-#include "DisplayManager.h"
-#include "DeviceManager.h"
-#include "GameSetup.h"
-#include "GameState.h"
-#include "BatteryManager.h"
-#include "EEPROMManager.h"
-#include "Utils.h"
-#include "IInputManager.h"
-#include "HardwareManager.h" */
+#define ENABLE_DEBUG 1
 
 // =================================================================================
 //

@@ -5,6 +5,7 @@
 #include "DisplayManager.h"
 #include "GameSetup.h"
 #include "GameState.h"
+#include "Config.h"
 
 #ifdef SIMULATION_MODE
 //#warning SIMULATION_MODE is enabled
@@ -17,11 +18,13 @@ InputManager hwInput;
 IInputManager* input = &hwInput;
 #endif
 
+int playerLives[4];  // Global or static life total array
+
 void setup() {
   unsigned long delayTime = random(1000, 3000); // Random delay to stagger device startup
   delay(delayTime);
 
-  Serial.begin(115200);
+  LOG_BEGIN(115200);
   Serial.println("\n[Main] Setup starting...");
 
   // --- Initialize Display ---
@@ -58,6 +61,7 @@ void setup() {
   }
 
   EPD_2IN9_V2_Display((UBYTE*)display.getDisplayBuffer());
+
 }
 
 void loop() {

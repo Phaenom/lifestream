@@ -3,6 +3,7 @@
 #include "GameState.h"
 #include "DeviceManager.h"
 #include "NetworkManager.h"
+#include "Config.h"
 
 DisplayManager display;
 
@@ -87,7 +88,7 @@ void DisplayManager::drawTurnMarker(int x, int y) {
     } else {
         Paint_DrawCircle(x, y, 5, WHITE, DOT_PIXEL_1X1, DRAW_FILL_FULL);
     }
-    Serial.printf("[Display] Drawing turn marker at (%d, %d), state: %s\n", x, y, toggle ? "BLACK" : "WHITE");
+    LOGF("[Display] Drawing turn marker at (%d, %d), state: %s\n", x, y, toggle ? "BLACK" : "WHITE");
     toggle = !toggle;
     EPD_2IN9_V2_Display(displayBuffer);
 }
@@ -134,7 +135,7 @@ void DisplayManager::drawLife(uint8_t playerId, int life) {
     }
 
     if (&Font12 == nullptr || str == nullptr) {
-        Serial.println("[Display] Font12 or str is null — skipping draw");
+        LOGLN("[Display] Font12 or str is null — skipping draw");
         return;
     }
 
@@ -144,7 +145,7 @@ void DisplayManager::drawLife(uint8_t playerId, int life) {
     int y = std::max(0, std::min(region.lifeY - 8, 128 - 16));
 
     if (displayBuffer == nullptr) {
-        Serial.println("[Display] displayBuffer is null — skipping partial draw");
+        LOGLN("[Display] displayBuffer is null — skipping partial draw");
         return;
     }
 
@@ -183,11 +184,11 @@ void DisplayManager::drawPoison(uint8_t playerId, int poison) {
  * Combines calls to drawLife, drawPoison, and updateTurnIndicator.
  */
 void DisplayManager::renderPlayerState(uint8_t playerId, const PlayerState& state) {
-    Serial.printf("[Display] Rendering P%d: life=%d, poison=%d, turn=%d\n",
+    LOGF("[Display] Rendering P%d: life=%d, poison=%d, turn=%d\n",
                   playerId, state.life, state.poison, state.isTurn);
 
     if (displayBuffer == nullptr) {
-        Serial.println("[Display] displayBuffer is null!");
+        LOGLN("[Display] displayBuffer is null!");
         return;
     }
 
@@ -200,19 +201,19 @@ void DisplayManager::renderPlayerState(uint8_t playerId, const PlayerState& stat
     int currentLife = state.eliminated ? 0 : state.life;
 
     if (cachedLife[playerId] != currentLife) {
-        Serial.println("[Display] → drawLife()");
+        LOGLN("[Display] → drawLife()");
         cachedLife[playerId] = currentLife;
         drawLife(playerId, currentLife);
     }
 
     if (cachedPoison[playerId] != state.poison) {
-        Serial.println("[Display] → drawPoison()");
+        LOGLN("[Display] → drawPoison()");
         cachedPoison[playerId] = state.poison;
         drawPoison(playerId, state.poison);
     }
 
     if (cachedTurn[playerId] != state.isTurn) {
-        Serial.println("[Display] → updateTurnIndicator()");
+        LOGLN("[Display] → updateTurnIndicator()");
         updateTurnIndicator(playerId, state.isTurn);
         cachedTurn[playerId] = state.isTurn;
     }
@@ -266,7 +267,7 @@ void DisplayManager::drawDeviceRole() {
 
 void DisplayManager::flush() {
     if (displayBuffer == nullptr) {
-        Serial.println("[Display] flush() skipped — displayBuffer is null");
+        LOGLN("[Display] flush() skipped — displayBuffer is null");
         return;
     }
 
