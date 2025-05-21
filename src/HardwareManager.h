@@ -44,10 +44,9 @@ public:
 
     int mode; // game manager / network manager handles?
 
-
     // SETUP FUNCTIONS
     void begin();
-    void update(bool new_state); // Update function to read inputs each loop
+    void update(); // Update function to read inputs each loop
 
     // Update function to read inputs each loop
     long update_encoder();
