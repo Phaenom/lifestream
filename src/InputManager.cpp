@@ -35,7 +35,7 @@ void InputManager::begin() {
     // Attach interrupt to encoder pin A to detect changes and call encoderISR
     attachInterrupt(digitalPinToInterrupt(ENCODER_PIN_A), encoderISR, CHANGE);
 
-    Serial.println("[InputManager] Hardware input initialized (encoder + button)");
+    LOGLN("[InputManager] Hardware input initialized (encoder + button)");
 }
 
 void InputManager::update() {
@@ -55,7 +55,7 @@ void InputManager::update() {
     if (currentButton == LOW && lastButton == HIGH) {
         buttonPressTime = now;  // Record time when button was pressed
         buttonHeld = true;
-        Serial.println("[InputManager] Button pressed.");
+        LOGLN("[InputManager] Button pressed.");
     }
 
     // Detect button release (transition from LOW to HIGH)
@@ -63,10 +63,10 @@ void InputManager::update() {
         unsigned long pressTime = now - buttonPressTime;  // Calculate press duration
         if (pressTime >= 1000) {
             longPressDetected = true;  // Long press if held for 1000 ms or more
-            Serial.printf("[InputManager] Button released after %lu ms (long press)\n", pressTime);
+            LOGF("[InputManager] Button released after %lu ms (long press)\n", pressTime);
         } else {
             shortPressDetected = true;  // Otherwise, short press
-            Serial.printf("[InputManager] Button released after %lu ms (short press)\n", pressTime);
+            LOGF("[InputManager] Button released after %lu ms (short press)\n", pressTime);
         }
         buttonHeld = false;
     }
@@ -87,7 +87,7 @@ int InputManager::getRotation() const {
 // Returns true if a short button press was detected since the last call, then clears the flag
 bool InputManager::wasButtonShortPressed() const {
     bool result = shortPressDetected;
-    if (result) Serial.println("[InputManager] Detected short press event");
+    if (result) LOGLN("[InputManager] Detected short press event");
     shortPressDetected = false;
     return result;
 }
@@ -95,7 +95,7 @@ bool InputManager::wasButtonShortPressed() const {
 // Returns true if a long button press was detected since the last call, then clears the flag
 bool InputManager::wasButtonLongPressed() const {
     bool result = longPressDetected;
-    if (result) Serial.println("[InputManager] Detected long press event");
+    if (result) LOGLN("[InputManager] Detected long press event");
     longPressDetected = false;
     return result;
 }

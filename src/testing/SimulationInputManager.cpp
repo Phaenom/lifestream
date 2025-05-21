@@ -2,12 +2,13 @@
 #include "testing/SimulationInputManager.h"
 #include "DeviceManager.h"
 #include "NetworkManager.h"
+#include "Config.h"
 
 // Initializes the simulation input manager.
 // Outputs a startup message to Serial for confirmation.
 void SimulationInputManager::begin() {
-    Serial.println("\n[SimInput] Simulation input initialized.");
-    Serial.printf("\n[InputManager] Update cycle at %lu ms", millis());
+    LOGLN("\n[SimInput] Simulation input initialized.");
+    LOGF("\n[InputManager] Update cycle at %lu ms", millis());
 }
 
 // Checks for incoming serial input and maps characters to simulated input behavior.
@@ -17,7 +18,7 @@ void SimulationInputManager::update() {
     if (!Serial.available()) return;
 
     char input = tolower(Serial.read());
-    Serial.printf("[SimInput] Received char: 0x%02X (%c)\n", input, input);
+    LOGF("[SimInput] Received char: 0x%02X (%c)\n", input, input);
 
     unsigned long now = millis();
     extern GameState gameState;
@@ -27,7 +28,7 @@ void SimulationInputManager::update() {
         case '1': case '2': case '3': case '4':
             // Select target player by number
             selectedPlayer = input - '1';
-            Serial.printf("[SimInput] Targeting player %d\n", selectedPlayer);
+            LOGF("[SimInput] Targeting player %d\n", selectedPlayer);
             break;
 
         case 'w':
@@ -91,13 +92,13 @@ void SimulationInputManager::update() {
             // Reset all player states and refresh display
             gameState.resetAll();
             display.renderAllPlayerStates(gameState);
-            Serial.println("[SimInput] All player states and turn reset.");
+            LOGLN("[SimInput] All player states and turn reset.");
             break;
 
         case 'g':
             // Redraw current game state for all players
             display.renderAllPlayerStates(gameState);
-            Serial.println("[SimInput] Redrawing all player states.");
+            LOGLN("[SimInput] Redrawing all player states.");
             break;
 
         case 'b':
@@ -111,7 +112,7 @@ void SimulationInputManager::update() {
     }
 
     // if (rotationDelta != 0) {
-    //     Serial.printf("[SimInput] Adjusting life of P%d by %d\n", selectedPlayer, rotationDelta);
+    //     LOGF("[SimInput] Adjusting life of P%d by %d\n", selectedPlayer, rotationDelta);
     //     gameState.adjustLife(selectedPlayer, rotationDelta);
     //     rotationDelta = 0;
     // }
@@ -120,7 +121,7 @@ void SimulationInputManager::update() {
 // Returns the simulated rotation value and clears it.
 int SimulationInputManager::getRotation() const {
     int delta = rotationDelta;
-    // Serial.printf("[SimInput] getRotation: returning %d\n", delta);
+    // LOGF("[SimInput] getRotation: returning %d\n", delta);
     rotationDelta = 0;
     return delta;
 }
@@ -142,7 +143,7 @@ bool SimulationInputManager::wasButtonLongPressed() const {
 // Increments the internal rotation delta and logs the change.
 void SimulationInputManager::simulateRotation(int delta) {
     rotationDelta += delta;
-    Serial.printf("[SimInput] simulateRotation called: delta=%d, new value=%d\n", delta, rotationDelta);
+    LOGF("[SimInput] simulateRotation called: delta=%d, new value=%d\n", delta, rotationDelta);
 }
 
 // Simulates a button press/release and sets short/long press flags based on press duration.

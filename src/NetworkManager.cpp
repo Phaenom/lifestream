@@ -2,6 +2,7 @@
 #include "DeviceManager.h"
 #include "GameState.h"
 #include "GameSetup.h"
+#include "Config.h"
 
 // Global instance of the NetworkManager
 NetworkManager network;
@@ -12,7 +13,7 @@ uint8_t broadcastAddress[6] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 // Internal: Initialize ESP-NOW subsystem, reset device on failure
 void NetworkManager::setupESPNow() {
     if (esp_now_init() != ESP_OK) {
-        Serial.println("ESP-NOW Initialization Failed");
+        LOGLN("ESP-NOW Initialization Failed");
         ESP.restart();  // Force reboot to attempt clean re-initialization
     }
 }
@@ -87,7 +88,7 @@ void NetworkManager::onDataReceive(const uint8_t *mac, const uint8_t *incomingDa
         case MSG_TYPE_HOST_ANNOUNCE:
             // Passive discovery: record host presence and MAC
             if (device.role == ROLE_UNDEFINED) {
-                Serial.println("[Network] Host Announce Received!");
+                LOGLN("[Network] Host Announce Received!");
             }
             hostDetected = true;
             memcpy(hostMac, mac, 6);
@@ -98,7 +99,7 @@ void NetworkManager::onDataReceive(const uint8_t *mac, const uint8_t *incomingDa
             if (device.role == ROLE_CLIENT && len >= sizeof(GameData)) {
                 memcpy(&pendingGameState, incomingData, sizeof(GameData));
                 hasPendingGameState = true;
-                Serial.printf("[Network] Game state buffered: Turn=%d, Life=%d/%d/%d/%d\n",
+                LOGF("[Network] Game state buffered: Turn=%d, Life=%d/%d/%d/%d\n",
                             pendingGameState.currentTurn,
                             pendingGameState.lifeTotal[0], pendingGameState.lifeTotal[1],
                             pendingGameState.lifeTotal[2], pendingGameState.lifeTotal[3]);
@@ -109,7 +110,7 @@ void NetworkManager::onDataReceive(const uint8_t *mac, const uint8_t *incomingDa
             // HOST: Apply life update and rebroadcast full game state
             if (device.role == ROLE_HOST && len == sizeof(LifeChange)) {
                 LifeChange* change = (LifeChange*)incomingData;
-                Serial.printf("[Network] Host received life change: P%d → %d\n",
+                LOGF("[Network] Host received life change: P%d → %d\n",
                             change->senderID, change->newLifeTotal);
 
                 int current = gameState.getPlayerState(change->senderID).life;
@@ -131,7 +132,7 @@ void NetworkManager::onDataReceive(const uint8_t *mac, const uint8_t *incomingDa
             // HOST: Apply poison update and rebroadcast full game state
             if (device.role == ROLE_HOST && len == sizeof(PoisonChange)) {
                 PoisonChange* change = (PoisonChange*)incomingData;
-                Serial.printf("[Network] Host received poison change: P%d → %d\n",
+                LOGF("[Network] Host received poison change: P%d → %d\n",
                             change->senderID, change->newPoison);
                 int current = gameState.getPlayerState(change->senderID).poison;
                 gameState.adjustPoison(change->senderID, change->newPoison - current);
@@ -160,19 +161,19 @@ void NetworkManager::heartbeat() {
         uint8_t localMac[6];
         esp_read_mac(localMac, ESP_MAC_WIFI_STA);
 
-        Serial.println("\n[Loop] Network Heartbeat");
-        Serial.printf(" - Player ID : %d\n", device.getPlayerID());
-        Serial.printf(" - Role      : %s\n", device.roleToString(device.getRole()));
-        Serial.printf(" - MAC Addr  : %02X:%02X:%02X:%02X:%02X:%02X\n",
+        LOGLN("\n[Loop] Network Heartbeat");
+        LOGF(" - Player ID : %d\n", device.getPlayerID());
+        LOGF(" - Role      : %s\n", device.roleToString(device.getRole()));
+        LOGF(" - MAC Addr  : %02X:%02X:%02X:%02X:%02X:%02X\n",
                       localMac[0], localMac[1], localMac[2],
                       localMac[3], localMac[4], localMac[5]);
 
         esp_now_peer_num_t peerCount;
         esp_now_get_peer_num(&peerCount);
-        Serial.printf(" - ESP-NOW Peers: %d\n", peerCount.total_num);
+        LOGF(" - ESP-NOW Peers: %d\n", peerCount.total_num);
 
         if (device.role == ROLE_CLIENT && hostMac[0] != 0) {
-            Serial.printf(" - Host MAC  : %02X:%02X:%02X:%02X:%02X:%02X\n",
+            LOGF(" - Host MAC  : %02X:%02X:%02X:%02X:%02X:%02X\n",
                           hostMac[0], hostMac[1], hostMac[2],
                           hostMac[3], hostMac[4], hostMac[5]);
         }
@@ -198,8 +199,8 @@ void NetworkManager::applyPendingGameState() {
     playerCount = pendingGameState.playerCount;
     currentTurn = pendingGameState.currentTurn;
 
-    Serial.println("[Network] Applying pending game state...");
-    Serial.printf("[Debug] Drawing state: Turn=%d, Life=%d/%d/%d/%d\n",
+    LOGLN("[Network] Applying pending game state...");
+    LOGF("[Debug] Drawing state: Turn=%d, Life=%d/%d/%d/%d\n",
                   currentTurn, pendingGameState.lifeTotal[0],
                   pendingGameState.lifeTotal[1], pendingGameState.lifeTotal[2], pendingGameState.lifeTotal[3]);
 
@@ -221,12 +222,12 @@ void NetworkManager::applyPendingGameState() {
 void NetworkManager::sendLifeChangeRequest(uint8_t playerId, uint8_t newLifeTotal) {
     LifeChange change = {MSG_TYPE_LIFE_CHANGE, playerId, newLifeTotal};
     esp_err_t res = esp_now_send(hostMac, (uint8_t*)&change, sizeof(change));
-    Serial.printf("[Network] Sent life update to host: P%d → %d (res=%d)\n", playerId, newLifeTotal, res);
+    LOGF("[Network] Sent life update to host: P%d → %d (res=%d)\n", playerId, newLifeTotal, res);
 }
 
 // CLIENT: Explicit poison change message directed to known host MAC
 void NetworkManager::sendPoisonChangeRequest(uint8_t playerId, uint8_t newPoison) {
     PoisonChange change = {MSG_TYPE_POISON_CHANGE, playerId, newPoison};
     esp_err_t res = esp_now_send(hostMac, (uint8_t*)&change, sizeof(change));
-    Serial.printf("[Network] Sent poison update: P%d → %d (res=%d)\n", playerId, newPoison, res);
+    LOGF("[Network] Sent poison update: P%d → %d (res=%d)\n", playerId, newPoison, res);
 }

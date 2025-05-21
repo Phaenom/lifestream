@@ -1,11 +1,12 @@
 #include "GameState.h"
 #include "GameSetup.h"
 #include "NetworkManager.h"
+#include "Config.h"
 
 GameState gameState;
 
 void GameState::begin(int id, int life) {
-    Serial.println("\n[GameSetup] Host beginning game setup...");
+    LOGLN("\n[GameSetup] Host beginning game setup...");
     localPlayerId = id;
     startingLife = life;
     currentTurnPlayer = 0;
@@ -28,7 +29,7 @@ void GameState::reset() {
     players[localPlayerId].isTurn = false;
 
     display.renderPlayerState(localPlayerId, players[localPlayerId]);
-    Serial.println("[GameState] Local player state reset to starting values.");
+    LOGLN("[GameState] Local player state reset to starting values.");
 }
 
 void GameState::resetAll() {
@@ -43,20 +44,20 @@ void GameState::resetAll() {
     players[currentTurnPlayer].isTurn = true;
     display.renderPlayerState(currentTurnPlayer, players[currentTurnPlayer]);
 
-    Serial.println("[GameState] All players reset to starting state.");
+    LOGLN("[GameState] All players reset to starting state.");
 }
 
 void GameState::setTurn(bool active) {
     players[localPlayerId].isTurn = active;
     display.renderPlayerState(localPlayerId, players[localPlayerId]);
-    Serial.printf("[GameState] Local turn state set to: %s\n", active ? "true" : "false");
+    LOGF("[GameState] Local turn state set to: %s\n", active ? "true" : "false");
 }
 
 void GameState::checkElimination() {
     PlayerState& self = players[localPlayerId];
     if (self.life <= 0 || self.poison >= 10) {
         self.eliminated = true;
-        Serial.println("[GameState] Player eliminated.");
+        LOGLN("[GameState] Player eliminated.");
     }
 }
 
@@ -68,7 +69,7 @@ void GameState::updateRemotePlayer(uint8_t id, const PlayerState& state) {
     if (id == localPlayerId || id >= 4) return;
     players[id] = state;
     display.renderPlayerState(id, players[id]);
-    Serial.printf("[GameState] Remote player %d state updated: life=%d, poison=%d, turn=%s, eliminated=%s\n",
+    LOGF("[GameState] Remote player %d state updated: life=%d, poison=%d, turn=%s, eliminated=%s\n",
                   id, state.life, state.poison,
                   state.isTurn ? "true" : "false",
                   state.eliminated ? "true" : "false");
@@ -82,7 +83,7 @@ void GameState::nextTurn() {
     players[currentTurnPlayer].isTurn = true;
     display.renderPlayerState(currentTurnPlayer, players[currentTurnPlayer]);
 
-    Serial.printf("[GameState] Turn passed from Player %d to Player %d\n", 
+    LOGF("[GameState] Turn passed from Player %d to Player %d\n", 
                   (currentTurnPlayer + playerCount - 1) % playerCount, currentTurnPlayer);
 }
 
@@ -105,7 +106,7 @@ void GameState::adjustPoison(uint8_t playerId, int delta) {
     if (p.poison >= 10) p.eliminated = true;
 
     display.renderPlayerState(playerId, p);
-    Serial.printf("[GameState] Adjusting poison for player %d by %+d\n", playerId, delta);
+    LOGF("[GameState] Adjusting poison for player %d by %+d\n", playerId, delta);
 }
 
 void GameState::adjustLife(uint8_t playerId, int delta) {
@@ -120,7 +121,7 @@ void GameState::adjustLife(uint8_t playerId, int delta) {
     if (p.life == 0 || p.poison >= 10) p.eliminated = true;
 
     display.renderPlayerState(playerId, p);
-    Serial.printf("[GameState] Adjusting life for player %d by %+d. New life: %d\n", playerId, delta, p.life);
+    LOGF("[GameState] Adjusting life for player %d by %+d. New life: %d\n", playerId, delta, p.life);
 }
 
 bool GameState::lifeChanged(uint8_t playerId, int previousValue) {

@@ -1,17 +1,18 @@
-#include "GameSetup.h"
 #include <Arduino.h>
+#include "GameSetup.h"
+#include "Config.h"
 
 // Global GameSetup instance
 GameSetup gameSetup;
 
 void GameSetup::begin() {
-    Serial.println("\n[GameSetup] initialized.");
+    LOGLN("\n[GameSetup] initialized.");
 
     // TODO: Replace with interactive setup using Display + Input
     startingLife = 20;
     playerCount = 4;
 
-    Serial.printf("[GameSetup] Default setup — Players: %d, Starting Life: %d\n", playerCount, startingLife);
+    LOGF("[GameSetup] Default setup — Players: %d, Starting Life: %d\n", playerCount, startingLife);
     configured = true;  // Mark as configured for testing
 }
 
@@ -28,10 +29,10 @@ void GameSetup::setFromNetwork(int players, int life) {
     startingLife = life;
     configured = true;
 
-    Serial.printf("[GameSetup] Received config: %d players, %d starting life\n", playerCount, startingLife);
+    LOGF("[GameSetup] Received config: %d players, %d starting life\n", playerCount, startingLife);
 }
 
 bool GameSetup::isConfigured() const {
-    Serial.printf("[GameSetup] isConfigured() called — %s\n", configured ? "true" : "false");
+    LOGF("[GameSetup] isConfigured() called — %s\n", configured ? "true" : "false");
     return configured;
 }

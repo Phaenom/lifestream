@@ -1,11 +1,12 @@
 #include "DeviceManager.h"
 #include "NetworkManager.h"
+#include "Config.h"
 
 // Global DeviceManager instance
 DeviceManager device;
 
 void DeviceManager::begin() {
-    Serial.println("[DeviceManager] Initialized.");
+    LOGLN("[DeviceManager] Initialized.");
 }
 
 /* bool DeviceManager::isHost() const {
@@ -15,7 +16,7 @@ void DeviceManager::begin() {
 
 // Promote device to Host role; assign Player ID 0 and add broadcast peer
 void DeviceManager::becomeHost() {
-    Serial.println("\nBecoming HOST");
+    LOGLN("\nBecoming HOST");
     role = ROLE_HOST;
     myPlayerID = 0; // Convention: host is always Player 0
 
@@ -25,13 +26,13 @@ void DeviceManager::becomeHost() {
     peerInfo.encrypt = false;
 
     if (esp_now_add_peer(&peerInfo) != ESP_OK) {
-        Serial.println("Failed to add broadcast peer");
+        LOGLN("Failed to add broadcast peer");
     }
 }
 
 // Promote device to Client role; assign Player ID 1 (static for now)
 void DeviceManager::becomeClient() {
-    Serial.println("Becoming CLIENT");
+    LOGLN("Becoming CLIENT");
     role = ROLE_CLIENT;
     myPlayerID = 1;
 
@@ -44,10 +45,10 @@ void DeviceManager::becomeClient() {
 
         if (!esp_now_is_peer_exist(network.hostMac)) {
             esp_err_t res = esp_now_add_peer(&peerInfo);
-            Serial.printf("[Network] Client added host peer (res=%d)\n", res);
+            LOGF("[Network] Client added host peer (res=%d)\n", res);
         }
     } else {
-        Serial.println("[Network] Warning: hostMac not set when becoming client");
+        LOGLN("[Network] Warning: hostMac not set when becoming client");
     }
 }
 
