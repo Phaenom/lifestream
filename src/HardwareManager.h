@@ -1,64 +1,67 @@
-
 #ifndef HARDWARE_MANAGER_H
 #define HARDWARE_MANAGER_H
 
-// #include <ESP32Encoder.h>
-// #include <ezButton.h>
-//#include <Button.h>
-//#include "pitches.h" // how to..l.?
+/* 
+| Button  | Action | Press Type               | Result |
+| ------- | ------ | ------------------------ | ------ |
+| Encoder | Short  | Toggle life/poison       |        |
+| Encoder | Long   | Reset local device state |        |
+| Arcade  | Short  | Advance game turn        |        |
+| Arcade  | Long   | Reset game state         |        |
+ */
 
 #include <ESP32Encoder.h>
 #include <Arduino.h>
 #include <ezButton.h>
 #include "IInputManager.h"
-//# include "Config.h"
 
-/*
-  HardwareManager Class (Stub)
-  Designed to handle output to LEDs and Buzzer.
-  Designed to handle inputs from Rotary Encoder and Buttons.
-*/
+// Input modes for rotary encoder
+enum InputMode {
+    MODE_LIFE = 0,
+    MODE_POISON = 1
+};
 
 class HardwareManager : public IInputManager {
-
 public:
-    HardwareManager(); // Constructor
+    HardwareManager();
 
-    // class parameters
-
-    // ENCODER STUFF
-    ESP32Encoder encoder;
-    int64_t oldPosition;
-    int64_t newPosition;
-    int64_t delta;
-
-    // BUTTON STUFF
-    ezButton encoder_button; 	// ENCODER BUTTON STUFF
-    ezButton led_button; // LED BUTTON STUFF
-
-    bool led_state; // LED state
-    bool isPressed;
-    bool isReleased;
-    bool isLongPress; // what to use this for?
-    long pressTime;
-    long pressDuration;
-
-    int mode; // game manager / network manager handles?
-
-    // SETUP FUNCTIONS
     void begin() override;
-    void update() override; // Update function to read inputs each loop
+    void update() override;
 
-    // Update function to read inputs each loop
     long update_encoder() override;
-    //bool update_button();
+    bool isEncoderButtonReleased() override;
+    bool isArcadeButtonReleased() override;
 
-    bool get_encoder_button() override; // rename button names?
-    bool get_arcade_button() override;
-
-    //void set_mode();
     void reset();
+    InputMode getMode() const { return mode; }
 
+private:
+    // Rotary encoder
+    ESP32Encoder encoder;
+    int64_t oldPosition = 0;
+    int64_t newPosition = 0;
+    int64_t delta = 0;
+
+    // Buttons
+    ezButton encoderButton;
+    ezButton arcadeButton;
+
+    // Long press
+    const unsigned long LONG_PRESS_THRESHOLD = 1000; // 1000ms = 1s
+    unsigned long encoderPressStart = 0;
+    unsigned long arcadePressStart = 0;
+    bool encoderLongPressDetected = false;
+    bool arcadeLongPressDetected = false;
+
+    // LED
+    bool ledState = LOW;
+
+    // Input mode
+    InputMode mode = MODE_LIFE;
+
+    // Internal helpers
+    void handleEncoderButton();
+    void handleArcadeButton();
 };
 
 extern HardwareManager hardware;

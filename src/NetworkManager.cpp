@@ -3,6 +3,7 @@
 #include "GameState.h"
 #include "GameSetup.h"
 #include "Config.h"
+#include "HardwareManager.h"
 
 // Global instance of the NetworkManager
 NetworkManager network;
@@ -211,7 +212,7 @@ void NetworkManager::applyPendingGameState() {
         state.poison = pendingGameState.poisonTotal[i];
         state.eliminated = (state.life <= 0);
         state.isTurn = (i == currentTurn);
-        display.renderPlayerState(i, state);
+        display.renderPlayerState(i, state, hardware.getMode() == MODE_POISON, i == device.getPlayerID());
     }
 
     display.flush();

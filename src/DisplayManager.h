@@ -20,25 +20,24 @@ class DisplayManager {
 public:
     DisplayManager();
 
-    void begin();                                           // Initialize display system
-    void renderPlayerState(uint8_t playerId, const PlayerState& state);  // Draw full info for one player
-    void renderAllPlayerStates(const class GameState& state);            // Draw all players
-    void drawDeviceRole();                                  // Draw host/client role indicator
-    void flush();                                           // Push any pending updates to the screen
-    const UBYTE* getDisplayBuffer() const;                  // Return pointer to display buffer
+    void begin();  // Initialize display system
+
+    // Full player info render with mode and local-player context
+    void renderPlayerState(uint8_t playerId, const PlayerState& state, bool isPoisonMode, bool isLocalPlayer);
+
+    void renderAllPlayerStates(const class GameState& state);   // Redraw all players
+    void drawDeviceRole();                                     // Show HOST/CLIENT role text
+    void flush();                                              // Force full screen redraw
+    const UBYTE* getDisplayBuffer() const;                     // Get buffer pointer
+    void refreshAll();  // Full screen redraw
 
 private:
-    void drawLife(uint8_t playerId, int life);              // Draw life total or "ELIMINATED"
-    void drawPoison(uint8_t playerId, int poison);          // Draw poison counter
-    void updateTurnIndicator(uint8_t playerId, bool isTurn); // Draw blinking indicator if player's turn
-    void drawTurnMarker(int x, int y);                      // Draw the circular turn marker
-    void clearTurnMarker(int x, int y);                     // Erase turn marker
-    void drawLogo(int x, int y);                            // Draw MTG logo at given coordinates
-    UBYTE* displayBuffer = nullptr;                         // Display memory buffer
-    bool toggle = false;                                    // Blink state toggle
+    void drawLife(uint8_t playerId, int life, bool isActive);   // Draw life value with optional indicator
+    void drawPoison(uint8_t playerId, int poison, bool isActive); // Draw poison value with optional indicator
+    void drawLogo(int x, int y);                                // Draw MTG symbol
+    UBYTE* displayBuffer = nullptr;                             // Pixel buffer
 };
 
-// Global DisplayManager instance
 extern DisplayManager display;
 
 #endif // DISPLAY_MANAGER_H

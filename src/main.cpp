@@ -63,7 +63,7 @@ void setup() {
 
   // --- Initial Render of All Players ---
   for (int id = 0; id < gameSetup.getPlayerCount(); ++id) {
-    display.renderPlayerState(id, gameState.getPlayerState(id));
+    display.renderPlayerState(id, gameState.getPlayerState(id), hardware.getMode() == MODE_POISON, id == device.getPlayerID());
   }
 
   EPD_2IN9_V2_Display((UBYTE*)display.getDisplayBuffer());

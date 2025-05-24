@@ -16,10 +16,14 @@ public:
     virtual long update_encoder();
 
     // Check if the input button was short pressed.
-    virtual bool get_encoder_button();
+    //virtual bool get_encoder_button();
 
     // Check if the input button was long pressed.
-    virtual bool get_arcade_button();
+    //virtual bool get_arcade_button();
+
+    virtual bool isEncoderButtonReleased() ;
+
+    virtual bool isArcadeButtonReleased() ;
 
     virtual ~IInputManager() {}
 };

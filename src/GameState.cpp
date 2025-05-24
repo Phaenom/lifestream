@@ -2,6 +2,7 @@
 #include "GameSetup.h"
 #include "NetworkManager.h"
 #include "Config.h"
+#include "HardwareManager.h"
 
 GameState gameState;
 
@@ -19,7 +20,7 @@ void GameState::begin(int id, int life) {
         players[i].eliminated = false;
     }
 
-    display.renderPlayerState(localPlayerId, players[localPlayerId]);
+    display.renderPlayerState(localPlayerId, players[localPlayerId], hardware.getMode() == MODE_POISON, true);
 }
 
 void GameState::reset() {
@@ -28,7 +29,7 @@ void GameState::reset() {
     players[localPlayerId].eliminated = false;
     players[localPlayerId].isTurn = false;
 
-    display.renderPlayerState(localPlayerId, players[localPlayerId]);
+    display.renderPlayerState(localPlayerId, players[localPlayerId], hardware.getMode() == MODE_POISON, true);
     LOGLN("[GameState] Local player state reset to starting values.");
 }
 
@@ -38,18 +39,18 @@ void GameState::resetAll() {
         players[i].poison = 0;
         players[i].eliminated = false;
         players[i].isTurn = false;
-        display.renderPlayerState(i, players[i]);
+        display.renderPlayerState(i, players[i], hardware.getMode() == MODE_POISON, i == localPlayerId);
     }
     currentTurnPlayer = 0;
     players[currentTurnPlayer].isTurn = true;
-    display.renderPlayerState(currentTurnPlayer, players[currentTurnPlayer]);
+    display.renderPlayerState(currentTurnPlayer, players[currentTurnPlayer], hardware.getMode() == MODE_POISON, currentTurnPlayer == localPlayerId);
 
     LOGLN("[GameState] All players reset to starting state.");
 }
 
 void GameState::setTurn(bool active) {
     players[localPlayerId].isTurn = active;
-    display.renderPlayerState(localPlayerId, players[localPlayerId]);
+    display.renderPlayerState(localPlayerId, players[localPlayerId], hardware.getMode() == MODE_POISON, true);
     LOGF("[GameState] Local turn state set to: %s\n", active ? "true" : "false");
 }
 
@@ -68,23 +69,23 @@ const PlayerState& GameState::getPlayerState(uint8_t id) const {
 void GameState::updateRemotePlayer(uint8_t id, const PlayerState& state) {
     if (id == localPlayerId || id >= 4) return;
     players[id] = state;
-    display.renderPlayerState(id, players[id]);
+    display.renderPlayerState(id, players[id], hardware.getMode() == MODE_POISON, false);
     LOGF("[GameState] Remote player %d state updated: life=%d, poison=%d, turn=%s, eliminated=%s\n",
-                  id, state.life, state.poison,
-                  state.isTurn ? "true" : "false",
-                  state.eliminated ? "true" : "false");
+          id, state.life, state.poison,
+          state.isTurn ? "true" : "false",
+          state.eliminated ? "true" : "false");
 }
 
 void GameState::nextTurn() {
     players[currentTurnPlayer].isTurn = false;
-    display.renderPlayerState(currentTurnPlayer, players[currentTurnPlayer]);
+    display.renderPlayerState(currentTurnPlayer, players[currentTurnPlayer], hardware.getMode() == MODE_POISON, currentTurnPlayer == localPlayerId);
 
     currentTurnPlayer = (currentTurnPlayer + 1) % playerCount;
     players[currentTurnPlayer].isTurn = true;
-    display.renderPlayerState(currentTurnPlayer, players[currentTurnPlayer]);
+    display.renderPlayerState(currentTurnPlayer, players[currentTurnPlayer], hardware.getMode() == MODE_POISON, currentTurnPlayer == localPlayerId);
 
     LOGF("[GameState] Turn passed from Player %d to Player %d\n", 
-                  (currentTurnPlayer + playerCount - 1) % playerCount, currentTurnPlayer);
+          (currentTurnPlayer + playerCount - 1) % playerCount, currentTurnPlayer);
 }
 
 int GameState::getCurrentTurnPlayer() const {
@@ -105,7 +106,7 @@ void GameState::adjustPoison(uint8_t playerId, int delta) {
     if (p.poison < 0) p.poison = 0;
     if (p.poison >= 10) p.eliminated = true;
 
-    display.renderPlayerState(playerId, p);
+    display.renderPlayerState(playerId, p, true, playerId == localPlayerId);
     LOGF("[GameState] Adjusting poison for player %d by %+d\n", playerId, delta);
 }
 
@@ -120,7 +121,7 @@ void GameState::adjustLife(uint8_t playerId, int delta) {
 
     if (p.life == 0 || p.poison >= 10) p.eliminated = true;
 
-    display.renderPlayerState(playerId, p);
+    display.renderPlayerState(playerId, p, false, playerId == localPlayerId);
     LOGF("[GameState] Adjusting life for player %d by %+d. New life: %d\n", playerId, delta, p.life);
 }
 
